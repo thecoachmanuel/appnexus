@@ -1,0 +1,333 @@
+workflows:
+  android-build:
+    name: Android Build
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      java: 21
+      node: 22
+
+      # Variables are injected via the Codemagic API (cloud-build edge function)
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+
+      - name: Generate Capacitor config and build
+        script: |
+          rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
+
+          node -e "
+            const fs = require('fs');
+            const sanitizeSegment = (segment, fallback) => {
+              const cleaned = String(segment || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+              if (!cleaned) return fallback;
+              return /^[a-z]/.test(cleaned) ? cleaned : 'app' + cleaned;
+            };
+            const sanitizeAppId = (value, appName) => {
+              const fallback = ['com', 'app', sanitizeSegment(appName, 'mobile')];
+              const source = String(value || '').split('.').filter(Boolean);
+              const segments = source.length
+                ? source.map((segment, index) => sanitizeSegment(segment, fallback[index] || 'app'))
+                : [...fallback];
+              while (segments.length < 3) segments.push(fallback[segments.length] || 'app');
+              return segments.join('.');
+            };
+            const appName = process.env.APP_NAME || 'AppNexus';
+            const appId = sanitizeAppId(process.env.PACKAGE_NAME || 'com.app.appnexus', appName);
+            const url = process.env.WEBSITE_URL || '';
+            const cfg = { appId, appName, webDir: 'dist', server: { url, cleartext: true } };
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+            fs.writeFileSync(
+              'capacitor.config.ts',
+              'import type { CapacitorConfig } from \'@capacitor/cli\';\n\n' +
+              'const config: CapacitorConfig = ' + JSON.stringify(cfg, null, 2) + ';\n\n' +
+              'export default config;\n'
+            );
+            console.log('Generated Capacitor config:', JSON.stringify(cfg, null, 2));
+          "
+
+          npm run build
+
+      - name: Add Android platform
+        script: |
+          node -e "
+            const cfg = require('./capacitor.config.json');
+            if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(cfg.appId)) {
+              throw new Error('Invalid appId: ' + cfg.appId);
+            }
+            console.log('appId OK before init:', cfg.appId);
+          "
+
+          APP_ID="$(node -p "require('./capacitor.config.json').appId")"
+          APP_NAME_SAFE="$(node -p "require('./capacitor.config.json').appName")"
+          WEBSITE_URL_SAFE="$(node -p "require('./capacitor.config.json').server?.url || ''")"
+
+          rm -rf android
+          rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
+
+          npx cap init "$APP_NAME_SAFE" "$APP_ID" --web-dir dist
+          # If cap init fails (e.g. TS config conflict), fall back to direct JSON write
+          if [ $? -ne 0 ]; then
+            echo "cap init failed, writing config directly..."
+          fi
+
+          APP_ID="$APP_ID" APP_NAME_SAFE="$APP_NAME_SAFE" WEBSITE_URL_SAFE="$WEBSITE_URL_SAFE" node -e "
+            const fs = require('fs');
+            const cfg = {
+              appId: process.env.APP_ID,
+              appName: process.env.APP_NAME_SAFE,
+              webDir: 'dist',
+              server: {
+                url: process.env.WEBSITE_URL_SAFE,
+                cleartext: true,
+              },
+            };
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+            fs.writeFileSync(
+              'capacitor.config.ts',
+              'import type { CapacitorConfig } from \'@capacitor/cli\';\n\n' +
+              'const config: CapacitorConfig = ' + JSON.stringify(cfg, null, 2) + ';\n\n' +
+              'export default config;\n'
+            );
+            console.log('Rewrote Capacitor config after init:', JSON.stringify(cfg, null, 2));
+          "
+
+          node -e "
+            const cfg = require('./capacitor.config.json');
+            if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(cfg.appId)) {
+              throw new Error('Invalid appId after init: ' + cfg.appId);
+            }
+            console.log('appId OK after init:', cfg.appId);
+          "
+
+          npx cap add android
+          npx cap sync android
+
+      - name: Set up JDK and build APK
+        script: |
+          export JAVA_HOME=$(/usr/libexec/java_home -v 21 2>/dev/null || echo "$JAVA_HOME")
+          export PATH="$JAVA_HOME/bin:$PATH"
+          java -version
+
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+
+    publishing:
+      scripts:
+        - name: Notify webhook on completion
+          script: |
+            if [ -n "$CM_WEBHOOK_URL" ]; then
+              BUILD_STATUS="finished"
+              if [ "$CM_BUILD_STEP_STATUS" = "failure" ]; then
+                BUILD_STATUS="failed"
+              fi
+
+              APK_PATH=$(find android/app/build/outputs -name "*.apk" -type f | head -1)
+              APK_SIZE=0
+              if [ -n "$APK_PATH" ]; then
+                APK_SIZE=$(stat -f%z "$APK_PATH" 2>/dev/null || stat --printf="%s" "$APK_PATH" 2>/dev/null || echo 0)
+              fi
+
+              curl -X POST "$CM_WEBHOOK_URL" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"build\": {
+                    \"_id\": \"$CM_BUILD_ID\",
+                    \"status\": \"$BUILD_STATUS\",
+                    \"artefacts\": [{
+                      \"type\": \"apk\",
+                      \"name\": \"$APP_NAME.apk\",
+                      \"url\": \"${CM_ARTIFACT_LINKS:-}\",
+                      \"size\": $APK_SIZE
+                    }],
+                    \"message\": \"Build $BUILD_STATUS for $APP_NAME\"
+                  }
+                }" || echo "Webhook notification failed (non-fatal)"
+            fi
+
+  ios-build:
+    name: iOS Build
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      # Variables are injected via the Codemagic API (cloud-build edge function)
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+
+      - name: Generate Capacitor config and build
+        script: |
+          rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
+
+          node -e "
+            const fs = require('fs');
+            const appName = process.env.APP_NAME || 'AppNexus';
+            const bundleId = process.env.BUNDLE_ID || 'com.app.appnexus';
+            const url = process.env.WEBSITE_URL || '';
+            const cfg = { appId: bundleId, appName, webDir: 'dist', server: { url, cleartext: true } };
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+            fs.writeFileSync(
+              'capacitor.config.ts',
+              'import type { CapacitorConfig } from \'@capacitor/cli\';\n\n' +
+              'const config: CapacitorConfig = ' + JSON.stringify(cfg, null, 2) + ';\n\n' +
+              'export default config;\n'
+            );
+            console.log('Generated Capacitor config:', JSON.stringify(cfg, null, 2));
+          "
+
+          npm run build
+
+      - name: Add iOS platform
+        script: |
+          BUNDLE_ID_SAFE="$(node -p "require('./capacitor.config.json').appId")"
+          APP_NAME_SAFE="$(node -p "require('./capacitor.config.json').appName")"
+          WEBSITE_URL_SAFE="$(node -p "require('./capacitor.config.json').server?.url || ''")"
+
+          rm -rf ios
+          rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
+
+          echo "Initializing Capacitor with appName=$APP_NAME_SAFE appId=$BUNDLE_ID_SAFE"
+          npx cap init "$APP_NAME_SAFE" "$BUNDLE_ID_SAFE" --web-dir dist || echo "cap init exited non-zero, writing config directly..."
+
+          BUNDLE_ID_SAFE="$BUNDLE_ID_SAFE" APP_NAME_SAFE="$APP_NAME_SAFE" WEBSITE_URL_SAFE="$WEBSITE_URL_SAFE" node -e "
+            const fs = require('fs');
+            const cfg = {
+              appId: process.env.BUNDLE_ID_SAFE,
+              appName: process.env.APP_NAME_SAFE,
+              webDir: 'dist',
+              server: {
+                url: process.env.WEBSITE_URL_SAFE,
+                cleartext: true,
+              },
+            };
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+            fs.writeFileSync(
+              'capacitor.config.ts',
+              'import type { CapacitorConfig } from \'@capacitor/cli\';\n\n' +
+              'const config: CapacitorConfig = ' + JSON.stringify(cfg, null, 2) + ';\n\n' +
+              'export default config;\n'
+            );
+            console.log('Rewrote Capacitor config after init:', JSON.stringify(cfg, null, 2));
+          "
+
+          npx cap add ios
+          npx cap sync ios
+
+          IOS_PROJECT_DIR="$(dirname "$(find ios \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) | head -1)")"
+          if [ -z "$IOS_PROJECT_DIR" ] || [ "$IOS_PROJECT_DIR" = "." ]; then
+            echo "Could not find generated iOS project files under ios/"
+            ls -la ios || true
+            exit 1
+          fi
+
+          cd "$IOS_PROJECT_DIR"
+          if [ -f Podfile ]; then
+            pod install --repo-update
+          else
+            echo "No Podfile found in $IOS_PROJECT_DIR — continuing with SPM/default Capacitor setup"
+          fi
+
+      - name: Disable code signing and build
+        script: |
+          IOS_PROJECT_DIR="$(dirname "$(find ios \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) | head -1)")"
+          if [ -z "$IOS_PROJECT_DIR" ] || [ "$IOS_PROJECT_DIR" = "." ]; then
+            echo "Could not find generated iOS project files under ios/"
+            ls -la ios || true
+            exit 1
+          fi
+
+          cd "$IOS_PROJECT_DIR"
+
+          WORKSPACE_FILE="$(basename "$(find . -maxdepth 1 -name '*.xcworkspace' | head -1)")"
+          PROJECT_FILE="$(basename "$(find . -maxdepth 1 -name '*.xcodeproj' | head -1)")"
+
+          if [ -n "$WORKSPACE_FILE" ] && [ "$WORKSPACE_FILE" != "." ]; then
+            xcodebuild \
+              -workspace "$WORKSPACE_FILE" \
+              -scheme App \
+              -configuration Debug \
+              -sdk iphoneos \
+              -destination 'generic/platform=iOS' \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              DEVELOPMENT_TEAM="" \
+              -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive" \
+              archive
+          elif [ -n "$PROJECT_FILE" ] && [ "$PROJECT_FILE" != "." ]; then
+            xcodebuild \
+              -project "$PROJECT_FILE" \
+              -scheme App \
+              -configuration Debug \
+              -sdk iphoneos \
+              -destination 'generic/platform=iOS' \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              DEVELOPMENT_TEAM="" \
+              -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive" \
+              archive
+          else
+            echo "Neither .xcworkspace nor .xcodeproj found in $IOS_PROJECT_DIR"
+            ls -la
+            exit 1
+          fi
+
+      - name: Package IPA from archive
+        script: |
+          # Create IPA from the unsigned archive
+          mkdir -p "$CM_BUILD_DIR/build/ios/ipa"
+          cd "$CM_BUILD_DIR/build/ios/App.xcarchive/Products/Applications"
+
+          mkdir -p Payload
+          cp -r *.app Payload/
+          zip -r "$CM_BUILD_DIR/build/ios/ipa/$APP_NAME.ipa" Payload
+
+          echo "IPA created at $CM_BUILD_DIR/build/ios/ipa/$APP_NAME.ipa"
+          ls -la "$CM_BUILD_DIR/build/ios/ipa/"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/App.xcarchive/
+
+    publishing:
+      scripts:
+        - name: Notify webhook on completion
+          script: |
+            if [ -n "$CM_WEBHOOK_URL" ]; then
+              BUILD_STATUS="finished"
+              if [ "$CM_BUILD_STEP_STATUS" = "failure" ]; then
+                BUILD_STATUS="failed"
+              fi
+
+              IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
+              IPA_SIZE=0
+              if [ -n "$IPA_PATH" ]; then
+                IPA_SIZE=$(stat -f%z "$IPA_PATH" 2>/dev/null || stat --printf="%s" "$IPA_PATH" 2>/dev/null || echo 0)
+              fi
+
+              curl -X POST "$CM_WEBHOOK_URL" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"build\": {
+                    \"_id\": \"$CM_BUILD_ID\",
+                    \"status\": \"$BUILD_STATUS\",
+                    \"artefacts\": [{
+                      \"type\": \"ipa\",
+                      \"name\": \"$APP_NAME.ipa\",
+                      \"url\": \"${CM_ARTIFACT_LINKS:-}\",
+                      \"size\": $IPA_SIZE
+                    }],
+                    \"message\": \"iOS Build $BUILD_STATUS for $APP_NAME\"
+                  }
+                }" || echo "Webhook notification failed (non-fatal)"
+            fi
