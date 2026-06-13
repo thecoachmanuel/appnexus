@@ -206,7 +206,9 @@ export const useAdminData = () => {
   };
 
   const updateSetting = async (id: string, value: any) => {
-    const { error } = await adminApi.updateSetting(id, value);
+    const setting = settings.find((s) => s.id === id);
+    const key = setting ? setting.key : id;
+    const { error } = await adminApi.updateSetting(key, value);
     if (!error) {
       await fetchSettings();
       await fetchSettingsAuditLog();

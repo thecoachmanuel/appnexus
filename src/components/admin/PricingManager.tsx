@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { PricingPlansManager } from "./PricingPlansManager";
+import { CreditPacksManager } from "./CreditPacksManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, LayoutList, Coins, Zap } from "lucide-react";
 import { toast } from "sonner";
@@ -22,8 +24,12 @@ interface PricingManagerProps {
 
 export const PricingManager = ({
   plans,
+  creditPacks,
   onUpdatePlan,
   onCreatePlan,
+  onUpdateCreditPack,
+  onCreateCreditPack,
+  onDeleteCreditPack,
   onRefreshPlans,
   onRefreshCreditPacks,
   loading,
@@ -51,13 +57,18 @@ export const PricingManager = ({
     }
   };
 
+  const handleRefreshAll = () => {
+    onRefreshPlans();
+    onRefreshCreditPacks();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Pricing Plans</h1>
+          <h1 className="text-2xl font-bold text-foreground">Pricing & Credits</h1>
           <p className="text-muted-foreground text-sm">
-            Manage subscription plans and pricing tiers
+            Manage subscription plans, pricing tiers, and credit packs
           </p>
         </div>
         <div className="flex gap-2">
@@ -67,9 +78,9 @@ export const PricingManager = ({
               {seeding ? "Seeding..." : "Seed Defaults"}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onRefreshPlans} className="gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefreshAll} className="gap-2">
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            Refresh All
           </Button>
         </div>
       </div>
@@ -90,19 +101,45 @@ export const PricingManager = ({
             <Coins className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-foreground">{stats.totalPlans}</p>
-            <p className="text-xs text-muted-foreground">Total Plans</p>
+            <p className="text-2xl font-bold text-foreground">{Array.isArray(creditPacks) ? creditPacks.length : 0}</p>
+            <p className="text-xs text-muted-foreground">Credit Packs</p>
           </div>
         </div>
       </div>
 
-      <PricingPlansManager
-        plans={plans}
-        onUpdate={onUpdatePlan}
-        onCreate={onCreatePlan}
-        onRefresh={onRefreshPlans}
-        loading={loading}
-      />
+      <Tabs defaultValue="plans" className="w-full">
+        <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+          <TabsTrigger value="plans" className="gap-2">
+            <LayoutList className="w-4 h-4" />
+            Plans
+          </TabsTrigger>
+          <TabsTrigger value="credits" className="gap-2">
+            <Coins className="w-4 h-4" />
+            Credit Packs
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="plans" className="mt-6 border-0 p-0">
+          <PricingPlansManager
+            plans={plans}
+            onUpdate={onUpdatePlan}
+            onCreate={onCreatePlan}
+            onRefresh={onRefreshPlans}
+            loading={loading}
+          />
+        </TabsContent>
+
+        <TabsContent value="credits" className="mt-6 border-0 p-0">
+          <CreditPacksManager
+            packs={creditPacks || []}
+            onUpdate={onUpdateCreditPack}
+            onCreate={onCreateCreditPack}
+            onDelete={onDeleteCreditPack}
+            onRefresh={onRefreshCreditPacks}
+            loading={loading}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

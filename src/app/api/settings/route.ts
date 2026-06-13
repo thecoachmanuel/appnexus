@@ -36,8 +36,15 @@ export async function PUT(req: Request) {
     
     if (!key) return NextResponse.json({ error: 'Key is required' }, { status: 400 });
 
+    const query: any = {};
+    if (typeof key === 'string' && key.match(/^[0-9a-fA-F]{24}$/)) {
+      query._id = key;
+    } else {
+      query.key = key;
+    }
+
     const updated = await SystemSetting.findOneAndUpdate(
-      { key },
+      query,
       { $set: { value } },
       { new: true }
     );
