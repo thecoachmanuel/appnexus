@@ -106,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser({ id: data.id, email: data.email, display_name: data.display_name });
       setSession({ access_token: data.token, user: { id: data.id, email: data.email, display_name: data.display_name } });
       sessionStorage.setItem(TOKEN_KEY, data.token);
+      document.cookie = `${TOKEN_KEY}=${data.token}; path=/; SameSite=Lax`;
 
       return { error: null };
     } catch (error) {
@@ -131,8 +132,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (rememberMe) {
         localStorage.setItem(TOKEN_KEY, data.token);
+        document.cookie = `${TOKEN_KEY}=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
       } else {
         sessionStorage.setItem(TOKEN_KEY, data.token);
+        document.cookie = `${TOKEN_KEY}=${data.token}; path=/; SameSite=Lax`;
       }
       
       return { error: null };
@@ -157,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REMEMBER_ME_KEY);
+    document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     setUser(null);
     setSession(null);
   };

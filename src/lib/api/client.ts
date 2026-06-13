@@ -327,7 +327,10 @@ export const apiClient = {
 };
 
 export const stripeApi = {
-  createCreditsCheckout: (priceId: string, returnUrl: string, cancelUrl?: string) => handleApi(Promise.resolve({})),
+  createCreditsCheckout: (priceId: string, returnUrl: string, cancelUrl?: string) => handleApi(fetchApi('/api/payments/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ priceId, returnUrl, cancelUrl })
+  })),
   createSubscriptionCheckout: (priceId: string, billingCycle: string, returnUrl: string, cancelUrl?: string) => handleApi(Promise.resolve({})),
   createPortalSession: (returnUrl: string) => handleApi(Promise.resolve({}))
 };
