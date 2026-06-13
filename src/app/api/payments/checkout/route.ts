@@ -15,9 +15,11 @@ export async function POST(req: Request) {
     const token = authHeader.split(' ')[1];
     const decoded = verifyToken(token);
     
-    if (!decoded || !decoded.id) {
+    if (!decoded || typeof decoded === 'string' || !('id' in decoded)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
+
+    const decodedToken = decoded as any;
 
     const { priceId, returnUrl } = await req.json();
 
@@ -32,7 +34,7 @@ export async function POST(req: Request) {
     else creditsToAdd = 100; // fallback
 
     // Immediately grant the credits (Mocking the webhook for instant local test)
-    await User.findByIdAndUpdate(decoded.id, {
+    await User.findByIdAndUpdate(decodedToken.id, {
       $inc: { credits: creditsToAdd }
     });
 
