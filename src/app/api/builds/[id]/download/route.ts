@@ -22,7 +22,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     else if (platform === 'linux' || platform === 'pwa') file = '/mock-build.zip';
     else if (config?.storeReady) file = '/mock-build.aab';
 
-    return NextResponse.redirect(`${baseUrl}${file}`);
+    const redirectUrl = new URL(file, baseUrl);
+    return NextResponse.redirect(redirectUrl.toString());
   } catch (error: any) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
