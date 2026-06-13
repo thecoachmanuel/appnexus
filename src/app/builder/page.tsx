@@ -38,14 +38,30 @@ const pageTransition = {
   duration: 0.3,
 };
 
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 const AppBuilder = () => {
   const { currentStep, goToStep, config, updateConfig, setConfig, isAnalyzing, setIsAnalyzing } = useAppStore();
   const { settings } = useSystemSettings();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/auth?redirect=/builder");
+    }
+  }, [user, authLoading, router]);
 
   // Update document title with app name
   useEffect(() => {
     document.title = `${settings.app_name} - App Builder`;
   }, [settings.app_name]);
+
+  if (authLoading || (!user && !authLoading)) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   const handleUrlSubmit = (url: string) => {
     updateConfig({ websiteUrl: url });
