@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       email: email.toLowerCase(),
       password: hashedPassword,
       display_name: display_name || '',
-      role: 'admin' // By default granting admin for setup, though realistically it would depend on setup logic
+      role: 'user'
     });
 
     const token = signToken({ id: user._id, role: user.role });

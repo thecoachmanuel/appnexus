@@ -10,6 +10,8 @@ export interface User {
   email: string;
   display_name?: string;
   avatar_url?: string;
+  role?: string;
+  credits?: number;
 }
 
 export interface Session {
@@ -103,12 +105,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: new Error(data.error || 'Failed to create account') };
       }
 
-      setUser({ id: data.id, email: data.email, display_name: data.display_name });
-      setSession({ access_token: data.token, user: { id: data.id, email: data.email, display_name: data.display_name } });
+      setUser({ id: data.id, email: data.email, display_name: data.display_name, role: data.role });
+      setSession({ access_token: data.token, user: { id: data.id, email: data.email, display_name: data.display_name, role: data.role } });
       sessionStorage.setItem(TOKEN_KEY, data.token);
       document.cookie = `${TOKEN_KEY}=${data.token}; path=/; SameSite=Lax`;
 
-      return { error: null };
+      return { error: null, data };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error('Failed to create account') };
     }
@@ -127,8 +129,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: new Error(data.error || 'Failed to sign in') };
       }
 
-      setUser({ id: data.id, email: data.email, display_name: data.display_name });
-      setSession({ access_token: data.token, user: { id: data.id, email: data.email, display_name: data.display_name } });
+      setUser({ id: data.id, email: data.email, display_name: data.display_name, role: data.role });
+      setSession({ access_token: data.token, user: { id: data.id, email: data.email, display_name: data.display_name, role: data.role } });
       
       if (rememberMe) {
         localStorage.setItem(TOKEN_KEY, data.token);
@@ -138,7 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         document.cookie = `${TOKEN_KEY}=${data.token}; path=/; SameSite=Lax`;
       }
       
-      return { error: null };
+      return { error: null, data };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error('Failed to sign in') };
     }

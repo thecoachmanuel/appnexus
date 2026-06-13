@@ -151,21 +151,25 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password, rememberMe);
+        const { error, data } = await signIn(email, password, rememberMe);
         if (error) {
           toast({ title: "Login Failed", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "Welcome back!", description: "You have successfully signed in." });
-          router.push("/dashboard");
+          // Redirect admin to admin dashboard
+          if (data?.role === 'admin') {
+            router.push("/admin");
+          } else {
+            router.push("/dashboard");
+          }
         }
       } else {
-        const { error } = await signUp(email, password, displayName);
+        const { error, data } = await signUp(email, password, displayName);
         if (error) {
           toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
         } else {
-          setSignupEmail(email);
-          setAuthView('verify-email');
-          toast({ title: "Account Created!", description: "Please check your email to verify your account." });
+          toast({ title: "Account Created!", description: "Welcome to AppNexus!" });
+          router.push("/dashboard");
         }
       }
     } finally {
