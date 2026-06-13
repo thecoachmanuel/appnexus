@@ -4,10 +4,14 @@ import { ApiConfiguration } from '@/lib/models/ApiConfiguration';
 import { getUserFromRequest } from '@/lib/auth';
 
 import { PaymentTransaction } from '@/lib/models/PaymentTransaction';
+import { SubscriptionPlan } from '@/lib/models/SubscriptionPlan';
+import { CreditPack } from '@/lib/models/CreditPack';
 
 const getModel = (collectionName: string) => {
   if (collectionName === 'api_configurations') return ApiConfiguration;
   if (collectionName === 'payment_transactions') return PaymentTransaction;
+  if (collectionName === 'subscription_plans') return SubscriptionPlan;
+  if (collectionName === 'credit_packs') return CreditPack;
   // Mock models for UI compatibility
   if (collectionName === 'user_roles' || collectionName === 'webhook_event_logs') {
     return {
