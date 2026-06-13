@@ -43,13 +43,28 @@ export async function GET(req: Request, { params }: { params: { collection: stri
     if (providerIn) {
       query.provider = { $in: providerIn.split(',') };
     }
+    
+    const provider = url.searchParams.get('provider');
+    if (provider) {
+      query.provider = provider;
+    }
+    
+    const isActive = url.searchParams.get('is_active');
+    if (isActive !== null) {
+      query.is_active = isActive === 'true';
+    }
 
     const id = url.searchParams.get('id');
     if (id) {
       query._id = id;
     }
 
-    const data = await Model.find(query);
+    let data = await Model.find(query);
+    
+    const single = url.searchParams.get('single');
+    if (single === 'true') {
+      data = data.length > 0 ? data[0] : null;
+    }
     return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -24,9 +24,12 @@ interface User {
   email: string | null;
   display_name: string | null;
   avatar_url: string | null;
-  created_at: string;
+  created_at?: string;
+  createdAt?: string;
   subscription_tier?: string | null;
   total_credits?: number;
+  credits?: number;
+  role?: string;
   projects_count?: number;
 }
 
@@ -54,33 +57,20 @@ export const UserManagement = ({ users, onRefresh, loading = false, isDemo = fal
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      const { data, error } = await apiClient.from("user_roles").select("user_id, role");
-      if (!error && data) {
-        const map: Record<string, AppRole> = {};
-        data.forEach((r: any) => { map[r.user_id] = r.role as AppRole; });
-        setUserRoles(map);
+    const map: Record<string, AppRole> = {};
+    users.forEach((u) => {
+      if (u.role) {
+        map[u.id] = (u.role === "admin" || u.role === "moderator" || u.role === "user" ? u.role : "user") as AppRole;
       }
-    };
-    fetchRoles();
+    });
+    setUserRoles(map);
   }, [users]);
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     setUpdatingRole(userId);
     try {
-      const currentRole = userRoles[userId];
-      if (currentRole) {
-        const { error } = await apiClient
-          .from("user_roles")
-          .update({ role: newRole })
-          .eq("user_id", userId);
-        if (error) throw error;
-      } else {
-        const { error } = await apiClient
-          .from("user_roles")
-          .insert({ user_id: userId, role: newRole });
-        if (error) throw error;
-      }
+      const { error } = await adminApi.updateUserRole(userId, newRole);
+      if (error) throw error;
       setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
       toast.success(`Role updated to ${roleConfig[newRole].label}`);
     } catch (err: any) {
@@ -214,8 +204,8 @@ export const UserManagement = ({ users, onRefresh, loading = false, isDemo = fal
                         </Select>
                       </TableCell>
                       <TableCell><Badge className={getTierColor(user.subscription_tier ?? null)}>{user.subscription_tier || "free"}</Badge></TableCell>
-                      <TableCell>{user.total_credits ?? 0}</TableCell>
-                      <TableCell className="text-muted-foreground">{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell>{user.total_credits ?? user.credits ?? 0}</TableCell>
+                      <TableCell className="text-muted-foreground">{format(new Date(user.created_at || user.createdAt || new Date().toISOString()), "MMM d, yyyy")}</TableCell>
                     </TableRow>
                   );
                 })

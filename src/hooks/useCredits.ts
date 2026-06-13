@@ -24,7 +24,17 @@ export const useCredits = () => {
       if (creditsError) {
         console.error("Error fetching credits:", creditsError);
       }
-      setCredits(creditsData);
+      
+      if (creditsData) {
+        setCredits({
+          ...creditsData,
+          credits: creditsData.credits ?? 0,
+          monthly_credits: creditsData.monthly_credits ?? (creditsData.credits ?? 0),
+          bonus_credits: creditsData.bonus_credits ?? 0
+        });
+      } else {
+        setCredits(null);
+      }
 
       // Fetch user subscription with plan details
       const { data: subData, error: subError } = await userApi.getSubscription();
@@ -61,7 +71,9 @@ export const useCredits = () => {
 
   const getTotalCredits = (): number => {
     if (!credits) return 0;
-    return credits.monthly_credits + credits.bonus_credits;
+    const monthly = typeof credits.monthly_credits === "number" ? credits.monthly_credits : (typeof credits.credits === "number" ? credits.credits : 0);
+    const bonus = typeof credits.bonus_credits === "number" ? credits.bonus_credits : 0;
+    return monthly + bonus;
   };
 
   useEffect(() => {
