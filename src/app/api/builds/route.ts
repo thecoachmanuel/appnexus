@@ -30,6 +30,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     await connectToDatabase();
 
+    let downloadFile = '/mock-build.apk';
+    if (body.platform === 'ios') downloadFile = '/mock-build.ipa';
+    else if (body.platform === 'macos') downloadFile = '/mock-build.dmg';
+    else if (body.platform === 'windows') downloadFile = '/mock-build.exe';
+    else if (body.platform === 'linux' || body.platform === 'pwa') downloadFile = '/mock-build.zip';
+    else if (body.storeReady) downloadFile = '/mock-build.aab';
+
     const build = await AppBuild.create({
       user_id: decoded.id,
       app_name: body.appName || 'My App',
@@ -38,7 +45,7 @@ export async function POST(req: Request) {
       config: body,
       status: 'complete',
       progress: 100,
-      download_url: 'https://example.com/mock-download-url.apk'
+      download_url: downloadFile
     });
 
     return NextResponse.json({ buildId: build._id, message: 'Started' }, { status: 201 });
