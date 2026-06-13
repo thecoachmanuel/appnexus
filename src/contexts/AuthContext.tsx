@@ -23,8 +23,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null; data?: any }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null; data?: any }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
