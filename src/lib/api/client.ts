@@ -336,7 +336,10 @@ export const stripeApi = {
 };
 
 export const aiApi = {
-  analyzeWebsite: (url: string) => handleApi(Promise.resolve({}))
+  analyzeWebsite: (url: string) => handleApi(fetchApi('/api/analyze-website', {
+    method: 'POST',
+    body: JSON.stringify({ url })
+  }))
 };
 
 export const proxyApi = {
