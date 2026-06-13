@@ -18,6 +18,8 @@ const Index = () => {
 
   useEffect(() => {
     document.title = `${settings.app_name} - ${settings.app_tagline}`;
+    // Silently run the setup script to seed default admin, plans, and credit packs
+    fetch('/api/setup').catch(console.error);
   }, [settings.app_name, settings.app_tagline]);
 
   return (
