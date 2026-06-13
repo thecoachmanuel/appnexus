@@ -62,7 +62,7 @@ export const AdminOverview = ({ stats, loading = false, isDemo = false }: AdminO
   const primaryCards = [
     {
       title: "Total Users",
-      value: stats.totalUsers.toLocaleString(),
+      value: (stats.totalUsers || 0).toLocaleString(),
       icon: Users,
       description: "Registered accounts",
     },
@@ -82,7 +82,7 @@ export const AdminOverview = ({ stats, loading = false, isDemo = false }: AdminO
     },
     {
       title: "Active Builds",
-      value: stats.activeBuilds.toString(),
+      value: (stats.activeBuilds || 0).toString(),
       icon: Hammer,
       description: "Currently processing",
     },
@@ -91,13 +91,13 @@ export const AdminOverview = ({ stats, loading = false, isDemo = false }: AdminO
   const analyticsCards = [
     {
       title: "Total Revenue",
-      value: `$${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `$${(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: DollarSign,
       description: "All-time earnings",
     },
     {
       title: "Total Builds",
-      value: stats.totalBuilds.toLocaleString(),
+      value: (stats.totalBuilds || 0).toLocaleString(),
       icon: BarChart3,
       description: "All-time app builds",
     },
