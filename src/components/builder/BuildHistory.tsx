@@ -68,8 +68,8 @@ const BuildHistory = ({ onRebuild }: BuildHistoryProps) => {
   const [selectedBuild, setSelectedBuild] = useState<Build | null>(null);
   const { user } = useAuth();
 
-  const getExpirationInfo = useCallback((createdAt: string) => {
-    const createdDate = new Date(createdAt);
+  const getExpirationInfo = useCallback((createdAtRaw: string) => {
+    const createdDate = new Date(createdAtRaw || new Date());
     const expirationDate = addDays(createdDate, BUILD_EXPIRATION_DAYS);
     const now = new Date();
     
@@ -344,7 +344,7 @@ const BuildHistory = ({ onRebuild }: BuildHistoryProps) => {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
-                        {formatDistanceToNow(new Date(build.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date((build as any).createdAt || build.created_at || new Date()), { addSuffix: true })}
                         {build.file_size_bytes && ` • ${formatFileSize(build.file_size_bytes)}`}
                         {expirationInfo && !expirationInfo.isExpired && !expirationInfo.isExpiringSoon && (
                           <span className="text-muted-foreground/60"> • {expirationInfo.expirationText}</span>

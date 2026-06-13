@@ -141,8 +141,8 @@ const BuildComparison = () => {
   const calculateBuildTime = (build: Build): number => {
     // Estimate based on created_at to updated_at difference
     // For builds that completed, this gives approximate build time
-    const created = new Date(build.created_at);
-    const updated = new Date(build.updated_at);
+    const created = new Date((build as any).createdAt || build.created_at || new Date());
+    const updated = new Date((build as any).updatedAt || build.updated_at || new Date());
     return Math.max(differenceInSeconds(updated, created), 1);
   };
 
@@ -270,7 +270,7 @@ const BuildComparison = () => {
                         <div className="flex items-center gap-2">
                           <span className="truncate max-w-[150px]">{build.app_name}</span>
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(build.created_at), { addSuffix: true })}
+                            {formatDistanceToNow(new Date((build as any).createdAt || build.created_at || new Date()), { addSuffix: true })}
                           </span>
                         </div>
                       </SelectItem>
@@ -300,7 +300,7 @@ const BuildComparison = () => {
                         <div className="flex items-center gap-2">
                           <span className="truncate max-w-[150px]">{build.app_name}</span>
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(build.created_at), { addSuffix: true })}
+                            {formatDistanceToNow(new Date((build as any).createdAt || build.created_at || new Date()), { addSuffix: true })}
                           </span>
                         </div>
                       </SelectItem>
@@ -382,7 +382,7 @@ const BuildComparison = () => {
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Built</dt>
                       <dd className="font-medium text-foreground">
-                        {formatDistanceToNow(new Date(selectedAndroid.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date((selectedAndroid as any).createdAt || selectedAndroid.created_at || new Date()), { addSuffix: true })}
                       </dd>
                     </div>
                     <div className="flex justify-between">
@@ -409,7 +409,7 @@ const BuildComparison = () => {
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Built</dt>
                       <dd className="font-medium text-foreground">
-                        {formatDistanceToNow(new Date(selectedIos.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date((selectedIos as any).createdAt || selectedIos.created_at || new Date()), { addSuffix: true })}
                       </dd>
                     </div>
                     <div className="flex justify-between">

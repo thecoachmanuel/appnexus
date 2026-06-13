@@ -272,7 +272,7 @@ const Navbar = () => {
                           >
                             <span className="font-medium truncate max-w-[160px]">{project.app_name}</span>
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(project.updatedAt || project.updated_at || new Date()), { addSuffix: true })}
                             </span>
                           </Link>
                           <button
