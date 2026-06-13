@@ -54,14 +54,14 @@ const Admin = () => {
         return (
           <PricingManager
             plans={adminData.plans as any}
-            creditPacks={[] as any}
+            creditPacks={adminData.creditPacks as any}
             onUpdatePlan={guardAction(adminData.updatePlan as any)}
             onCreatePlan={guardAction(adminData.createPlan as any)}
-            onUpdateCreditPack={guardAction(() => {})}
-            onCreateCreditPack={guardAction(() => {})}
-            onDeleteCreditPack={guardAction(() => {})}
+            onUpdateCreditPack={guardAction(adminData.updateCreditPack as any)}
+            onCreateCreditPack={guardAction(adminData.createCreditPack as any)}
+            onDeleteCreditPack={guardAction(adminData.deleteCreditPack as any)}
             onRefreshPlans={adminData.refresh.plans}
-            onRefreshCreditPacks={() => {}}
+            onRefreshCreditPacks={adminData.refresh.creditPacks}
             loading={isDataLoading}
             isDemo={isDemo}
           />
