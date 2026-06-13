@@ -36,7 +36,7 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
       contents: prompt,
     });
 
-    const text = response.text;
+    const text = response.text || '';
     
     // Clean up potential markdown formatting from the response
     const cleanJsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
