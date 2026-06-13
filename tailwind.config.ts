@@ -17,8 +17,8 @@ export default {
         'xs': '375px',
       },
       fontFamily: {
-        sans: ['Geist', 'system-ui', 'sans-serif'],
-        display: ['Geist', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       spacing: {
         '4.5': '1.125rem',
