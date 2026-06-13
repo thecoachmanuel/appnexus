@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PricingPlansManager } from "./PricingPlansManager";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, LayoutList, Coins } from "lucide-react";
+import { RefreshCw, LayoutList, Coins, Zap } from "lucide-react";
+import { toast } from "sonner";
 
 interface PricingManagerProps {
   plans: any;
@@ -32,19 +33,44 @@ export const PricingManager = ({
     return { activePlans, totalPlans };
   }, [plans]);
 
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch('/api/setup');
+      if (!res.ok) throw new Error('Failed to seed defaults');
+      toast.success('Successfully seeded default plans and credit packs');
+      onRefreshPlans();
+      onRefreshCreditPacks();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to seed defaults');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Pricing Plans</h1>
           <p className="text-muted-foreground text-sm">
             Manage subscription plans and pricing tiers
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={onRefreshPlans} className="gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          {stats.totalPlans === 0 && (
+            <Button onClick={handleSeed} disabled={seeding} variant="default" size="sm" className="gap-2">
+              <Zap className="w-4 h-4" />
+              {seeding ? "Seeding..." : "Seed Defaults"}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onRefreshPlans} className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Summary */}

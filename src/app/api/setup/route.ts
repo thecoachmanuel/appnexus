@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import connectToDatabase from '@/lib/db';
 import { User } from '@/lib/models/User';
 import { CreditPack } from '@/lib/models/CreditPack';
+import { SubscriptionPlan } from '@/lib/models/SubscriptionPlan';
 
 export async function GET() {
   try {
@@ -65,10 +66,60 @@ export async function GET() {
       ]);
     }
 
+    // --- Seed Subscription Plans ---
+    const existingPlans = await SubscriptionPlan.countDocuments();
+    if (existingPlans === 0) {
+      await SubscriptionPlan.insertMany([
+        {
+          name: 'Free',
+          tier: 'free',
+          price_monthly: 0,
+          price_yearly: 0,
+          monthly_credits: 5,
+          description: 'Basic access with limited credits.',
+          is_active: true,
+          features: {
+            app_builds: 1,
+            push_notifications: false
+          }
+        },
+        {
+          name: 'Pro',
+          tier: 'pro',
+          price_monthly: 19.99,
+          price_yearly: 199.99,
+          monthly_credits: 50,
+          description: 'Perfect for small teams and power users.',
+          is_active: true,
+          features: {
+            app_builds: 10,
+            push_notifications: true,
+            priority_support: true
+          }
+        },
+        {
+          name: 'Enterprise',
+          tier: 'enterprise',
+          price_monthly: 99.99,
+          price_yearly: 999.99,
+          monthly_credits: 500,
+          description: 'For growing businesses and agencies.',
+          is_active: true,
+          features: {
+            app_builds: -1, // Unlimited
+            push_notifications: true,
+            priority_support: true,
+            white_label: true
+          }
+        }
+      ]);
+    }
+
     return NextResponse.json({ 
-      message: 'Setup complete. Admin user and credit packs are ready.',
+      message: 'Setup complete. Admin user, plans, and credit packs are ready.',
       admin: email,
-      credit_packs_seeded: existingPacks === 0 ? 4 : 0
+      credit_packs_seeded: existingPacks === 0 ? 4 : 0,
+      plans_seeded: existingPlans === 0 ? 3 : 0
     }, { status: 200 });
 
   } catch (error: any) {
