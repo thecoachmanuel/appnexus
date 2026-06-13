@@ -54,7 +54,7 @@ export const AdminAnalytics = ({ transactions, users, builds, loading }: AdminAn
     const completedTransactions = transactions.filter((t) => t.status === "completed");
 
     completedTransactions.forEach((t) => {
-      const date = new Date(t.created_at);
+      const date = new Date((t as any).createdAt || t.created_at || new Date());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + Number(t.amount);
     });
@@ -71,7 +71,7 @@ export const AdminAnalytics = ({ transactions, users, builds, loading }: AdminAn
     const monthlyUsers: Record<string, number> = {};
 
     users.forEach((u) => {
-      const date = new Date(u.created_at);
+      const date = new Date((u as any).createdAt || u.created_at || new Date());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       monthlyUsers[monthKey] = (monthlyUsers[monthKey] || 0) + 1;
     });
@@ -106,7 +106,7 @@ export const AdminAnalytics = ({ transactions, users, builds, loading }: AdminAn
     const monthlyBuilds: Record<string, { total: number; completed: number; failed: number }> = {};
 
     builds.forEach((b) => {
-      const date = new Date(b.created_at);
+      const date = new Date((b as any).createdAt || b.created_at || new Date());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       if (!monthlyBuilds[monthKey]) {
         monthlyBuilds[monthKey] = { total: 0, completed: 0, failed: 0 };

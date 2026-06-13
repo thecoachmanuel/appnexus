@@ -359,7 +359,7 @@ const BuildHistory = () => {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="w-3.5 h-3.5" />
-                                  {format(new Date(build.created_at), "MMM d, yyyy")}
+                                  {format(new Date((build as any).createdAt || build.created_at || new Date()), "MMM d, yyyy")}
                                 </span>
                                 {build.file_size_bytes && (
                                   <span className="flex items-center gap-1">

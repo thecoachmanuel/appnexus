@@ -215,7 +215,7 @@ export const BankTransferManagement = ({
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {format(new Date(transfer.created_at), "MMM d, yyyy")}
+                          {format(new Date(transfer.createdAt || transfer.created_at || new Date()), "MMM d, yyyy")}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -298,7 +298,7 @@ export const BankTransferManagement = ({
                 <div>
                   <p className="text-muted-foreground">Date</p>
                   <p className="font-medium">
-                    {format(new Date(selectedTransfer.created_at), "PPP")}
+                    {format(new Date(selectedTransfer.createdAt || selectedTransfer.created_at || new Date()), "PPP")}
                   </p>
                 </div>
               </div>

@@ -141,7 +141,7 @@ const PaymentHistory = () => {
     </div>
     <div class="invoice-details">
       <p><strong>Invoice #:</strong> ${invoice.invoice_number}</p>
-      <p><strong>Date:</strong> ${format(new Date(invoice.created_at), "MMMM d, yyyy")}</p>
+      <p><strong>Date:</strong> ${format(new Date(invoice.createdAt || invoice.created_at || new Date()), "MMMM d, yyyy")}</p>
       ${invoice.due_date ? `<p><strong>Due Date:</strong> ${format(new Date(invoice.due_date), "MMMM d, yyyy")}</p>` : ""}
       <p><span class="status ${invoice.status === "paid" ? "status-paid" : "status-pending"}">${invoice.status.toUpperCase()}</span></p>
     </div>
@@ -310,7 +310,7 @@ const PaymentHistory = () => {
                             {transaction.transaction_type.replace(/_/g, " ")}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(transaction.created_at), "MMM d, yyyy 'at' h:mm a")}
+                            {format(new Date((transaction as any).createdAt || transaction.created_at || new Date()), "MMM d, yyyy 'at' h:mm a")}
                           </p>
                         </div>
                       </div>
@@ -366,7 +366,7 @@ const PaymentHistory = () => {
                             Invoice #{invoice.invoice_number}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(invoice.created_at), "MMM d, yyyy")}
+                            {format(new Date(invoice.createdAt || invoice.created_at || new Date()), "MMM d, yyyy")}
                             {invoice.due_date && (
                               <span> · Due {format(new Date(invoice.due_date), "MMM d, yyyy")}</span>
                             )}

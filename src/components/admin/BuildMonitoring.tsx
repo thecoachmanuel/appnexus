@@ -161,8 +161,8 @@ export const BuildMonitoring = ({ builds, activeBuilds, onRefresh, loading }: Bu
                         <span className="text-sm text-muted-foreground">{build.progress ?? 0}%</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{format(new Date(build.created_at), "MMM d, HH:mm")}</TableCell>
-                    <TableCell className="text-muted-foreground">{build.updated_at ? format(new Date(build.updated_at), "MMM d, HH:mm") : "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date((build as any).createdAt || build.created_at || new Date()), "MMM d, HH:mm")}</TableCell>
+                    <TableCell className="text-muted-foreground">{((build as any).updatedAt || build.updated_at) ? format(new Date((build as any).updatedAt || build.updated_at), "MMM d, HH:mm") : "-"}</TableCell>
                   </TableRow>
                 ))
               )}

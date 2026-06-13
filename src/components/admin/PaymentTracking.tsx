@@ -162,7 +162,7 @@ export const PaymentTracking = ({ transactions, stats, onRefresh, loading }: Pay
                     <TableCell>${Number(t.amount).toFixed(2)} {t.currency}</TableCell>
                     <TableCell className="capitalize">{t.payment_method.replace("_", " ")}</TableCell>
                     <TableCell><Badge className={getStatusColor(t.status)}>{t.status}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{format(new Date(t.created_at), "MMM d, yyyy HH:mm")}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date((t as any).createdAt || t.created_at || new Date()), "MMM d, yyyy HH:mm")}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => { setEditingTransaction(t); setFormOpen(true); }}><Pencil className="w-4 h-4" /></Button>

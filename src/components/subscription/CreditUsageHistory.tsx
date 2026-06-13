@@ -64,7 +64,7 @@ export const CreditUsageHistory = ({ history }: CreditUsageHistoryProps) => {
                 {isAddition ? "+" : "-"}{Math.abs(record.amount)}
               </p>
               <p className="text-xs text-muted-foreground">
-                {format(new Date(record.created_at), "MMM d, h:mm a")}
+                {format(new Date((record as any).createdAt || record.created_at || new Date()), "MMM d, h:mm a")}
               </p>
             </div>
           </div>

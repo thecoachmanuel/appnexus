@@ -511,7 +511,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
                       </Badge>
                     </div>
                     <CardDescription className="text-xs">
-                      Created {new Date(bucket.created_at).toLocaleDateString()}
+                      Created {new Date(bucket.createdAt || bucket.created_at || new Date()).toLocaleDateString()}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">

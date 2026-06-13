@@ -607,7 +607,7 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
                             <span className="hidden sm:inline text-muted-foreground/50">•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                              <span>{format(new Date(log.created_at), "MMM d, h:mm a")}</span>
+                              <span>{format(new Date(log.createdAt || log.created_at || new Date()), "MMM d, h:mm a")}</span>
                             </span>
                           </div>
 

@@ -71,7 +71,7 @@ export const RoleManagement = () => {
         email: user.email,
         display_name: user.display_name,
         avatar_url: user.avatar_url,
-        created_at: user.created_at,
+        created_at: user.createdAt || user.created_at || new Date().toISOString(),
         role: (user.role as AppRole) || null,
       }));
       setUsers(usersWithRoles);
@@ -235,7 +235,7 @@ export const RoleManagement = () => {
                   </TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {format(new Date(user.created_at), "MMM d, yyyy")}
+                    {format(new Date(user.createdAt || user.created_at || new Date()), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
                     <Select

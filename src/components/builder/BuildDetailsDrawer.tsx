@@ -191,7 +191,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
               <div className="text-xs text-muted-foreground mb-1">Created</div>
               <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                 <Calendar className="w-4 h-4" />
-                {format(new Date(build.created_at), "MMM d, yyyy")}
+                {format(new Date((build as any).createdAt || build.created_at || new Date()), "MMM d, yyyy")}
               </div>
             </div>
           </div>

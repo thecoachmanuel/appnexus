@@ -398,7 +398,7 @@ export const InvoiceManagement = ({
                         : "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(new Date(invoice.created_at), "MMM d, yyyy")}
+                      {format(new Date(invoice.createdAt || invoice.created_at || new Date()), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

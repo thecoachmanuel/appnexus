@@ -239,7 +239,7 @@ export const WebhookEventLogs = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {format(new Date(log.created_at), "MMM d, HH:mm:ss")}
+                      {format(new Date(log.createdAt || log.created_at || new Date()), "MMM d, HH:mm:ss")}
                     </TableCell>
                     <TableCell className="text-right flex items-center justify-end gap-1">
                       {log.status === "failed" && (
@@ -310,7 +310,7 @@ export const WebhookEventLogs = () => {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs mb-1">Received At</p>
-                  <p>{format(new Date(selectedLog.created_at), "MMM d, yyyy HH:mm:ss")}</p>
+                  <p>{format(new Date(selectedLog.createdAt || selectedLog.created_at || new Date()), "MMM d, yyyy HH:mm:ss")}</p>
                 </div>
               </div>
 

@@ -98,7 +98,7 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
     }
     for (const t of allTransactions) {
       if (t.status !== "completed") continue;
-      const key = format(new Date(t.created_at), "yyyy-MM");
+      const key = format(new Date(t.createdAt || t.created_at || new Date()), "yyyy-MM");
       if (key in months) months[key] += Number(t.amount) || 0;
     }
     return Object.entries(months).map(([month, amount]) => ({
@@ -112,11 +112,11 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const monthlyRevenue = allTransactions
-      .filter((t: any) => t.status === "completed" && new Date(t.created_at) >= monthStart)
+      .filter((t: any) => t.status === "completed" && new Date(t.createdAt || t.created_at || new Date()) >= monthStart)
       .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
     const prevMonthRevenue = allTransactions
       .filter((t: any) => {
-        const d = new Date(t.created_at);
+        const d = new Date(t.createdAt || t.created_at || new Date());
         return t.status === "completed" && d >= prevMonthStart && d < monthStart;
       })
       .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
