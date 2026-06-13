@@ -71,7 +71,17 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      // Redirect to original destination if one was provided in the query params
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirect = searchParams.get("redirect");
+      
+      if (redirect) {
+        router.push(redirect);
+      } else if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [user, loading, router]);
 
