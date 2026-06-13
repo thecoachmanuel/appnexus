@@ -111,7 +111,7 @@ const PhoneMockup = ({ config }: PhoneMockupProps) => {
         <div className="flex items-center justify-between px-3 py-2 bg-black/5">
           <Menu className="w-4 h-4" style={{ color: config.primaryColor }} />
           <span className="text-[10px] font-semibold" style={{ color: config.primaryColor }}>
-            {config.appName || "My App"}
+            {config.appName || "AppNexus"}
           </span>
           <div className="w-5 h-5 rounded-full" style={{ backgroundColor: config.accentColor }} />
         </div>
@@ -232,7 +232,7 @@ const PhoneMockup = ({ config }: PhoneMockupProps) => {
             {renderAppIcon()}
           </div>
           <p className="mt-2 text-white text-xs font-medium drop-shadow">
-            {config.appName || "My App"}
+            {config.appName || "AppNexus"}
           </p>
         </div>
       );
@@ -257,7 +257,7 @@ const PhoneMockup = ({ config }: PhoneMockupProps) => {
             {renderAppIcon()}
           </div>
           <p className={`mt-2 text-xs font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-            {config.appName || "My App"}
+            {config.appName || "AppNexus"}
           </p>
           <div className="flex gap-1.5 mt-3">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: config.primaryColor, opacity: 0.8 }} />
@@ -275,7 +275,7 @@ const PhoneMockup = ({ config }: PhoneMockupProps) => {
           {renderAppIcon()}
         </div>
         <p className={`mt-2 text-xs font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-          {config.appName || "My App"}
+          {config.appName || "AppNexus"}
         </p>
       </div>
     );

@@ -222,9 +222,14 @@ class QueryBuilder {
 
   async then(resolve: (value: any) => void, reject: (reason?: any) => void) {
     try {
-      const url = new URL(`/api/collections/${this.collection}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_API_URL || '');
+      let urlStr = `${baseUrl}/api/collections/${this.collection}`;
+      
       if (this.action === 'select' || this.action === 'delete') {
-        Object.keys(this.query).forEach(key => url.searchParams.append(key, String(this.query[key])));
+        const queryParams = new URLSearchParams();
+        Object.keys(this.query).forEach(key => queryParams.append(key, String(this.query[key])));
+        const qs = queryParams.toString();
+        if (qs) urlStr += `?${qs}`;
       }
 
       const methodMap = {
@@ -247,7 +252,7 @@ class QueryBuilder {
         options.body = JSON.stringify({ payload: this.payload, query: this.query });
       }
 
-      const res = await fetch(url.toString(), options);
+      const res = await fetch(urlStr, options);
       const data = await res.json();
 
       if (!res.ok) {

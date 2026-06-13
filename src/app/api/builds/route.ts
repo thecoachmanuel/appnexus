@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
+import mongoose from 'mongoose';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { verifyToken } from '@/lib/auth';
 
@@ -30,22 +31,20 @@ export async function POST(req: Request) {
     const body = await req.json();
     await connectToDatabase();
 
-    let downloadFile = '/mock-build.apk';
-    if (body.platform === 'ios') downloadFile = '/mock-build.ipa';
-    else if (body.platform === 'macos') downloadFile = '/mock-build.dmg';
-    else if (body.platform === 'windows') downloadFile = '/mock-build.exe';
-    else if (body.platform === 'linux' || body.platform === 'pwa') downloadFile = '/mock-build.zip';
-    else if (body.storeReady) downloadFile = '/mock-build.aab';
+    const buildId = new mongoose.Types.ObjectId();
+    const requestUrl = new URL(req.url);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || requestUrl.origin;
 
     const build = await AppBuild.create({
+      _id: buildId,
       user_id: decoded.id,
-      app_name: body.appName || 'My App',
-      package_name: `com.app.${(body.appName || 'myapp').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-      website_url: body.websiteUrl || 'https://example.com',
+      app_name: body.appName || 'AppNexus',
+      package_name: `com.app.${(body.appName || 'appnexus').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      website_url: body.websiteUrl || baseUrl,
       config: body,
       status: 'complete',
       progress: 100,
-      download_url: downloadFile
+      download_url: `${baseUrl}/api/builds/${buildId}/download`
     });
 
     return NextResponse.json({ buildId: build._id, message: 'Started' }, { status: 201 });

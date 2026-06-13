@@ -438,7 +438,7 @@ const DeviceComparisonMode = ({ config, devicePresets, onClose }: DeviceComparis
                           className="font-bold text-white truncate"
                           style={{ fontSize: Math.max(8, 10 * scale) }}
                         >
-                          {config.appName || "My App"}
+                          {config.appName || "AppNexus"}
                         </h3>
                       </div>
                     )}

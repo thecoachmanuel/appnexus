@@ -543,7 +543,7 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
               {/* App Header (mobile only) */}
               {selectedDevice.type !== "desktop" && (
                 <div className="px-3 py-1.5 relative z-10" style={{ backgroundColor: config.primaryColor }}>
-                  <h3 className="text-xs font-bold text-white truncate">{config.appName || "My App"}</h3>
+                  <h3 className="text-xs font-bold text-white truncate">{config.appName || "AppNexus"}</h3>
                 </div>
               )}
 
@@ -965,7 +965,7 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-foreground truncate">{config.appName || "My App"}</h5>
+                    <h4 className="font-display font-bold text-foreground text-lg mb-1">{config.appName || "AppNexus"}</h4>
                     <p className="text-xs text-muted-foreground mt-0.5 capitalize">{config.iconStyle || "Modern"} icon style</p>
                     <p className="text-xs text-muted-foreground mt-0.5 capitalize">{config.splashScreenStyle?.replace("-", " ") || "Centered"} splash</p>
                   </div>
@@ -1386,7 +1386,7 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
                   >
                     <div className="flex items-center gap-3">
                       <ArrowLeftCircle className="w-5 h-5 text-white/70" />
-                      <span className="font-semibold text-white">{config.appName || "My App"}</span>
+                      <span className="font-semibold text-white">{config.appName || "AppNexus"}</span>
                     </div>
                     <Home className="w-5 h-5 text-white/70" />
                   </div>

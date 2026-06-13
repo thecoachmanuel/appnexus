@@ -41,7 +41,7 @@ interface SystemSettings {
 }
 
 const DEFAULTS: SystemSettings = {
-  app_name: "My App",
+  app_name: "AppNexus",
   app_tagline: "Convert websites to native apps",
   maintenance_mode: false,
   demo_mode: false,

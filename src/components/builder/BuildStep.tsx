@@ -99,7 +99,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     const buildConfig = {
       version: "1.0",
       exportedAt: new Date().toISOString(),
-      appName: config.appName || "My App",
+      appName: config.appName || "AppNexus",
       platform: selectedPlatform,
       storeReady,
       android: selectedPlatform === 'android' ? {
@@ -220,7 +220,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     try {
       const { error } = await projectsApi.create({
         website_url: config.websiteUrl,
-        app_name: config.appName || "My App",
+        app_name: config.appName || "AppNexus",
         primary_color: config.primaryColor,
         accent_color: config.accentColor,
         navigation_style: config.navigationStyle,
@@ -282,7 +282,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         }
         saveProject();
         playSuccess();
-        notifyBuildComplete(config.appName || "Your app");
+        notifyBuildComplete(config.appName || "AppNexus");
         
         const isIos = build.config?.platform === "ios";
         toast({
@@ -298,7 +298,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
           clearInterval(pollIntervalRef.current);
         }
         playError();
-        notifyBuildFailed(config.appName || "Your app", build.error_message || undefined);
+        notifyBuildFailed(config.appName || "AppNexus", build.error_message || undefined);
         toast({
           title: "Build Failed",
           description: build.error_message || "Something went wrong during the build.",
@@ -366,7 +366,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     // Use provided config (from rebuild) or current config
     const buildParams = buildConfig || {
       websiteUrl: config.websiteUrl,
-      appName: config.appName || "My App",
+      appName: config.appName || "AppNexus",
       primaryColor: config.primaryColor,
       accentColor: config.accentColor,
       navigationStyle: config.navigationStyle,
@@ -651,7 +651,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
             <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 text-xs sm:text-sm">
               <div>
                 <dt className="text-muted-foreground text-[10px] sm:text-xs">App Name</dt>
-                <dd className="text-foreground font-medium truncate">{config.appName || "My App"}</dd>
+                <dd className="text-foreground font-medium truncate">{config.appName || "AppNexus"}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground text-[10px] sm:text-xs">Platform</dt>
