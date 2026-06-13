@@ -19,7 +19,7 @@ export interface AppProject {
   icon_style: string | null;
   splash_screen_style: string | null;
   build_status: string | null;
-  codemagic_connected: boolean;
+  github_actions_configured: boolean;
   github_connected: boolean;
   created_at: string;
   updated_at: string;

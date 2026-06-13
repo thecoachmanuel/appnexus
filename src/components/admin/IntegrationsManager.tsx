@@ -72,14 +72,15 @@ const INTEGRATIONS = [
     ],
   },
   {
-    key: "codemagic",
-    label: "Codemagic",
+    key: "github",
+    label: "GitHub Actions",
     icon: Server,
-    description: "Cloud build pipeline for compiling real Android APKs via Codemagic CI/CD",
+    description: "Cloud build pipeline for compiling Android APKs via GitHub Actions",
     fields: [
-      { name: "api_token", label: "API Token", placeholder: "Your Codemagic API token" },
-      { name: "app_id", label: "App ID", placeholder: "Auto-detected or paste from Codemagic dashboard" },
-      { name: "workflow_id", label: "Workflow ID", placeholder: "android-build" },
+      { name: "github_pat", label: "Personal Access Token", placeholder: "ghp_xxxxxxxxxxxx" },
+      { name: "repo_owner", label: "Repository Owner", placeholder: "e.g., octocat" },
+      { name: "repo_name", label: "Repository Name", placeholder: "e.g., hello-world" },
+      { name: "workflow_id", label: "Workflow Filename", placeholder: "build-android.yml" },
     ],
   },
 ] as const;
@@ -97,41 +98,6 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
   const [testEmailAddress, setTestEmailAddress] = useState("");
   const [syncingAppId, setSyncingAppId] = useState(false);
 
-  const handleSyncCodemagicAppId = async () => {
-    const token = (formValues["codemagic"] || {})["api_token"];
-    if (!token) {
-      toast.error("Enter your Codemagic API token first");
-      return;
-    }
-    setSyncingAppId(true);
-    try {
-      const res = await fetch("https://api.codemagic.io/apps", {
-        headers: { "x-auth-token": token },
-      });
-      if (!res.ok) throw new Error(`Codemagic returned ${res.status} — check your API token`);
-      const data = await res.json();
-      const apps = (data.applications || data || []) as Array<Record<string, unknown>>;
-      if (apps.length === 0) {
-        toast.error("No apps found on this Codemagic account");
-        return;
-      }
-      const firstApp = apps[0];
-      const appId = String(firstApp._id || firstApp.id || "");
-      const appName = String(firstApp.appName || firstApp.name || "Unknown");
-      if (!appId) {
-        toast.error("Could not determine App ID from Codemagic response");
-        return;
-      }
-      handleFieldChange("codemagic", "app_id", appId);
-      toast.success(`Synced App ID from "${appName}" — click Save to persist`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Sync failed";
-      toast.error(message);
-    } finally {
-      setSyncingAppId(false);
-    }
-  };
-
   useEffect(() => {
     fetchConfigs();
   }, []);
@@ -140,7 +106,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
     const { data, error } = await apiClient
       .from("api_configurations")
       .select("*")
-      .in("provider", ["resend", "appetize", "ai", "codemagic"]);
+      .in("provider", ["resend", "appetize", "ai", "github"]);
 
     if (error) {
       console.error("Error fetching integration configs:", error);
@@ -279,17 +245,16 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
           }
           break;
         }
-        case "codemagic": {
-          const token = values["api_token"];
-          if (!token) throw new Error("API Token is required");
-          const res = await fetch("https://api.codemagic.io/apps", {
-            headers: { "x-auth-token": token },
+        case "github": {
+          const pat = values["github_pat"];
+          if (!pat) throw new Error("Personal Access Token is required");
+          const res = await fetch("https://api.github.com/user", {
+            headers: { Authorization: `token ${pat}`, "User-Agent": "AppForge-Setup" },
           });
-          if (!res.ok) throw new Error(`Invalid API token (${res.status})`);
+          if (!res.ok) throw new Error(`Invalid GitHub PAT (${res.status})`);
           const data = await res.json();
-          const appCount = (data.applications || data || []).length;
-          setTestResults((prev) => ({ ...prev, [providerKey]: { success: true, message: `Connected — ${appCount} app(s) found` } }));
-          toast.success("Codemagic connection successful");
+          setTestResults((prev) => ({ ...prev, [providerKey]: { success: true, message: `Connected as ${data.login}` } }));
+          toast.success("GitHub connection successful");
           break;
         }
         default:
@@ -342,10 +307,10 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
     );
   }
 
-  const CodemagicSetupWizard = lazy(() => import("./CodemagicSetupWizard"));
+  const GitHubSetupWizard = lazy(() => import("./GitHubSetupWizard"));
 
-  // Check if Codemagic is configured
-  const codemagicConfigured = !!configs["codemagic"]?.id;
+  // Check if GitHub is configured
+  const githubConfigured = !!configs["github"]?.id;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -356,8 +321,8 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
         </p>
       </div>
 
-      {/* Codemagic Setup Wizard Banner */}
-      {!codemagicConfigured && !showWizard && (
+      {/* GitHub Setup Wizard Banner */}
+      {!githubConfigured && !showWizard && (
         <Card className="border-accent/30 bg-accent/5">
           <CardContent className="p-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -366,7 +331,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">Build Pipeline Not Configured</p>
-                <p className="text-xs text-muted-foreground">Set up Codemagic to compile real Android APKs</p>
+                <p className="text-xs text-muted-foreground">Set up GitHub Actions to compile Android APKs</p>
               </div>
             </div>
             <Button size="sm" onClick={() => setShowWizard(true)} disabled={isDemo}>
@@ -378,7 +343,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
 
       {showWizard && (
         <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-          <CodemagicSetupWizard onClose={() => { setShowWizard(false); fetchConfigs(); }} />
+          <GitHubSetupWizard onClose={() => { setShowWizard(false); fetchConfigs(); }} />
         </Suspense>
       )}
 
@@ -530,35 +495,17 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
                     </Button>
                   </div>
 
-                  {/* Codemagic Status Panel */}
-                  {integration.key === "codemagic" && isConfigured && (
+                  {/* GitHub Actions Status Panel */}
+                  {integration.key === "github" && isConfigured && (
                     <div className="pt-4 border-t border-border space-y-3">
                       <Label className="text-sm font-semibold">Pipeline Status</Label>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-                          <p className="text-xs text-muted-foreground">App ID</p>
+                          <p className="text-xs text-muted-foreground">Repository</p>
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-mono font-medium text-foreground truncate flex-1">
-                              {values["app_id"] || <span className="text-muted-foreground italic">Not set</span>}
+                              {values["repo_owner"] && values["repo_name"] ? `${values["repo_owner"]}/${values["repo_name"]}` : <span className="text-muted-foreground italic">Not set</span>}
                             </p>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0"
-                                  onClick={handleSyncCodemagicAppId}
-                                  disabled={syncingAppId || isDemo}
-                                >
-                                  {syncingAppId ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="w-3.5 h-3.5" />
-                                  )}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Sync App ID from Codemagic</TooltipContent>
-                            </Tooltip>
                           </div>
                         </div>
                         <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
@@ -569,16 +516,16 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
                         </div>
                         <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
                           <p className="text-xs text-muted-foreground">Last Test</p>
-                          {testResults["codemagic"] ? (
+                          {testResults["github"] ? (
                             <div className={`flex items-center gap-1.5 text-sm font-medium ${
-                              testResults["codemagic"].success ? "text-primary" : "text-destructive"
+                              testResults["github"].success ? "text-primary" : "text-destructive"
                             }`}>
-                              {testResults["codemagic"].success ? (
+                              {testResults["github"].success ? (
                                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                               ) : (
                                 <XCircle className="w-3.5 h-3.5 shrink-0" />
                               )}
-                              <span className="truncate">{testResults["codemagic"].message}</span>
+                              <span className="truncate">{testResults["github"].message}</span>
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground italic">No test run yet</p>

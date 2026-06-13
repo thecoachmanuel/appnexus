@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import mongoose from 'mongoose';
 import { AppBuild } from '@/lib/models/AppBuild';
+import { ApiConfiguration } from '@/lib/models/ApiConfiguration';
 import { verifyToken } from '@/lib/auth';
 
 export async function GET(req: Request) {
@@ -42,13 +43,53 @@ export async function POST(req: Request) {
       package_name: `com.app.${(body.appName || 'appnexus').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
       website_url: body.websiteUrl || baseUrl,
       config: body,
-      status: 'complete',
-      progress: 100,
-      download_url: `${baseUrl}/api/builds/${buildId}/download`
+      status: 'building',
+      progress: 0,
+      download_url: null
     });
+
+    const githubConfig = await ApiConfiguration.findOne({ provider: 'github', is_active: true });
+
+    if (!githubConfig || !githubConfig.config?.github_pat) {
+      build.status = 'failed';
+      await build.save();
+      return NextResponse.json({ error: 'GitHub Actions is not configured.' }, { status: 400 });
+    }
+
+    const { github_pat, repo_owner, repo_name, workflow_id } = githubConfig.config;
+    const webhook_url = `${baseUrl}/api/webhooks/github`;
+
+    const ghResponse = await fetch(`https://api.github.com/repos/${repo_owner}/${repo_name}/actions/workflows/${workflow_id || 'build-android.yml'}/dispatches`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${github_pat}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'AppForge-Builder'
+      },
+      body: JSON.stringify({
+        ref: 'main',
+        inputs: {
+          app_name: body.appName || 'AppNexus',
+          package_name: build.package_name,
+          website_url: body.websiteUrl || baseUrl,
+          build_id: buildId.toString(),
+          webhook_url: webhook_url
+        }
+      })
+    });
+
+    if (!ghResponse.ok) {
+      const errRes = await ghResponse.text();
+      console.error('GitHub Actions Dispatch Error:', errRes);
+      build.status = 'failed';
+      await build.save();
+      return NextResponse.json({ error: `Failed to trigger GitHub Action: ${ghResponse.statusText}` }, { status: 500 });
+    }
 
     return NextResponse.json({ buildId: build._id, message: 'Started' }, { status: 201 });
   } catch (error: any) {
+    console.error("Build POST error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

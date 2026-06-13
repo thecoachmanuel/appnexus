@@ -1,0 +1,115 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'App Name'
+        required: true
+        default: 'AppNexus'
+      package_name:
+        description: 'Package Name'
+        required: true
+        default: 'com.app.appnexus'
+      website_url:
+        description: 'Website URL to wrap'
+        required: true
+      build_id:
+        description: 'AppNexus Build ID'
+        required: true
+      webhook_url:
+        description: 'Webhook URL for status updates'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate Capacitor Config
+        run: |
+          rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
+          cat << 'EOF' > generate_config.js
+          const fs = require('fs');
+          const cfg = {
+            appId: process.env.PACKAGE_NAME,
+            appName: process.env.APP_NAME,
+            webDir: 'dist',
+            server: {
+              url: process.env.WEBSITE_URL,
+              cleartext: true
+            }
+          };
+          fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+          fs.writeFileSync(
+            'capacitor.config.ts',
+            `import type { CapacitorConfig } from '@capacitor/cli';\n\nconst config: CapacitorConfig = ${JSON.stringify(cfg, null, 2)};\n\nexport default config;\n`
+          );
+          EOF
+          node generate_config.js
+        env:
+          APP_NAME: ${{ github.event.inputs.app_name }}
+          PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+          WEBSITE_URL: ${{ github.event.inputs.website_url }}
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Setup Android Project
+        run: |
+          rm -rf android
+          npx cap init "${{ github.event.inputs.app_name }}" "${{ github.event.inputs.package_name }}" --web-dir dist
+          npx cap add android
+          npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Artifact
+        id: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name }}-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Send Success Webhook
+        if: success()
+        run: |
+          curl -X POST "${{ github.event.inputs.webhook_url }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "build_id": "${{ github.event.inputs.build_id }}",
+            "status": "complete",
+            "artifact_id": "${{ steps.upload-artifact.outputs.artifact-id }}"
+          }'
+
+      - name: Send Failure Webhook
+        if: failure()
+        run: |
+          curl -X POST "${{ github.event.inputs.webhook_url }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "build_id": "${{ github.event.inputs.build_id }}",
+            "status": "failed"
+          }'

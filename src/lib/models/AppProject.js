@@ -50,7 +50,7 @@ const appProjectSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  codemagic_connected: {
+  github_actions_configured: {
     type: Boolean,
     default: false
   },
