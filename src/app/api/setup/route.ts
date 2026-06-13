@@ -5,6 +5,8 @@ import { User } from '@/lib/models/User';
 import { CreditPack } from '@/lib/models/CreditPack';
 import { SubscriptionPlan } from '@/lib/models/SubscriptionPlan';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await connectToDatabase();

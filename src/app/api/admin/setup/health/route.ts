@@ -4,6 +4,8 @@ import connectToDatabase from '@/lib/db';
 import { SystemSetting } from '@/lib/models/SystemSetting';
 import { SubscriptionPlan } from '@/lib/models/SubscriptionPlan';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const status = {
     db: false,
