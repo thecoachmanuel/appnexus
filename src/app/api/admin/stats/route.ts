@@ -3,10 +3,18 @@ import connectToDatabase from '@/lib/db';
 import { User } from '@/lib/models/User';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { AppProject } from '@/lib/models/AppProject';
+import { getUserFromRequest } from '@/lib/auth';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
   try {
     await connectToDatabase();
+    
+    const admin = await getUserFromRequest(req);
+    if (!admin || admin.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     
     // Fallbacks for now, but counting actual data where possible
     const totalUsers = await User.countDocuments();

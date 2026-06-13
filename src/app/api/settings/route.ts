@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import { SystemSetting } from '@/lib/models/SystemSetting';
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   await connectToDatabase();
   const settings = await SystemSetting.find({});
