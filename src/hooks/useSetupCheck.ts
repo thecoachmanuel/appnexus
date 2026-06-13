@@ -18,7 +18,7 @@ export const useSetupCheck = () => {
   useEffect(() => {
     const checkSetupStatus = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
         const res = await fetch(`${API_URL}/api/auth/no-admin-exists`);
         
         if (!res.ok) {

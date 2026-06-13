@@ -52,7 +52,7 @@ export function useStorage(): UseStorageReturn {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const getApiUrl = () => typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
   const getToken = () => localStorage.getItem('app_auth_token') || sessionStorage.getItem('app_auth_token');
 
   const upload = useCallback(async (file: File, options: UploadOptions): Promise<UploadResult> => {

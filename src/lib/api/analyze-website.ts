@@ -50,16 +50,16 @@ function normalizeConfig(data: Record<string, unknown>): WebsiteAnalysisConfig {
  */
 export async function analyzeWebsite(websiteUrl: string): Promise<AnalysisResponse> {
   try {
-    console.log("[analyzeWebsite] Using custom Express backend with Gemini");
+    console.log("[analyzeWebsite] Using Next.js API route for Gemini website analysis");
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
     
-    const response = await fetch(`${apiUrl}/api/ai/analyze-website`, {
+    const response = await fetch(`${apiUrl}/api/analyze-website`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ websiteUrl }),
+      body: JSON.stringify({ url: websiteUrl }),
     });
 
     if (!response.ok) {

@@ -21,7 +21,7 @@ export const usePayPalCheckout = () => {
       const cancelUrl = `${window.location.origin}/subscription?payment=cancelled`;
 
       const token = localStorage.getItem('app_auth_token') || sessionStorage.getItem('app_auth_token');
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
       const res = await fetch(`${API_URL}/api/billing/paypal-checkout`, {
         method: 'POST',
         headers: { 

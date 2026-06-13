@@ -18,8 +18,9 @@ export async function checkEdgeFunctionHealth(
 ): Promise<EdgeFunctionHealth> {
   const start = performance.now();
   try {
+    const apiUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/${functionName}?health=1`,
+      `${apiUrl}/functions/v1/${functionName}?health=1`,
       {
         method: "POST",
         headers: {

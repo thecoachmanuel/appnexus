@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || '');
 
 const getToken = () => typeof window !== 'undefined' ? (localStorage.getItem('app_auth_token') || sessionStorage.getItem('app_auth_token')) : null;
 
