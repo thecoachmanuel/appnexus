@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
   stripe_customer_id: {
     type: String,
     default: null
+  },
+  credits: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 

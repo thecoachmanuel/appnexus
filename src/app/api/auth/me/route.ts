@@ -15,7 +15,8 @@ export async function GET(req: Request) {
       email: user.email,
       display_name: user.display_name,
       avatar_url: user.avatar_url,
-      role: user.role
+      role: user.role,
+      credits: user.credits || 0
     });
   } catch (error: any) {
     console.error('Auth check error:', error);
