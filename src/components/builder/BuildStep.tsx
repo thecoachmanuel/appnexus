@@ -199,7 +199,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       if (!user) return;
       const { data } = await userApi.getCredits();
       if (data) {
-        setUserCredits((data.monthly_credits ?? 0) + (data.bonus_credits ?? 0));
+        setUserCredits(data.credits ?? 0);
       }
     };
     fetchCredits();
@@ -329,7 +329,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     if (!isDemoAccount) {
       const { data: creditsData } = await userApi.getCredits();
       const totalCredits = creditsData 
-        ? (creditsData.monthly_credits ?? 0) + (creditsData.bonus_credits ?? 0) 
+        ? (creditsData.credits ?? 0) 
         : 0;
 
       if (totalCredits < creditsPerBuild) {

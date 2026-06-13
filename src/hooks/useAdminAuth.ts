@@ -30,7 +30,7 @@ export const useAdminAuth = () => {
 
       try {
         const token = localStorage.getItem('app_auth_token') || sessionStorage.getItem('app_auth_token');
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
         const res = await fetch(`${API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
