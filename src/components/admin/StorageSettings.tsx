@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import {
   HardDrive, FolderOpen, Shield, Globe, Lock, RefreshCw,
@@ -39,7 +39,7 @@ interface StorageSettingsProps {
 }
 
 const PROVIDER_OPTIONS = [
-  { value: "supabase", label: "Cloud Storage", description: "Built-in managed storage (default)" },
+  { value: "apiClient", label: "Cloud Storage", description: "Built-in managed storage (default)" },
   { value: "s3", label: "Amazon S3", description: "AWS S3 compatible storage" },
   { value: "gcs", label: "Google Cloud Storage", description: "GCS bucket storage" },
   { value: "r2", label: "Cloudflare R2", description: "S3-compatible edge storage" },
@@ -67,7 +67,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
   const [buckets, setBuckets] = useState<BucketInfo[]>([]);
   const [loadingBuckets, setLoadingBuckets] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [provider, setProvider] = useState("supabase");
+  const [provider, setProvider] = useState("apiClient");
   const [providerConfig, setProviderConfig] = useState({
     endpoint: "",
     region: "",
@@ -147,7 +147,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
   // ── Persistence: Load settings from system_settings ──
   const loadPersistedSettings = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await apiClient
         .from("system_settings")
         .select("key, value")
         .in("key", [
@@ -193,21 +193,21 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
   const persistSetting = useCallback(async (key: string, value: unknown, sectionLabel: string) => {
     try {
       // Try update first, then insert if not found
-      const { data: existing } = await supabase
+      const { data: existing } = await apiClient
         .from("system_settings")
         .select("id")
         .eq("key", key)
         .maybeSingle();
 
-      const jsonValue = value as unknown as import("@/integrations/supabase/types").Json;
+      const jsonValue = value as any;
       if (existing) {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("system_settings")
           .update({ value: jsonValue })
           .eq("key", key);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("system_settings")
           .insert([{ key, value: jsonValue, category: "storage", description: `Storage: ${sectionLabel}` }]);
         if (error) throw error;
@@ -233,9 +233,9 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
         ? parseInt(newBucket.fileSizeLimit, 10) * 1024 * 1024
         : undefined;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await apiClient.auth.getSession();
       const res = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/functions/v1/storage-admin?action=create`,
+        `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/storage-admin?action=create`,
         {
           method: "POST",
           headers: {
@@ -265,9 +265,9 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
 
   const fetchBuckets = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await apiClient.auth.getSession();
       const res = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/functions/v1/storage-admin?action=list`,
+        `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/storage-admin?action=list`,
         {
           headers: {
             Authorization: `Bearer ${session?.access_token}`,
@@ -303,7 +303,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
       return;
     }
     try {
-      const { data, error } = await supabase.storage
+      const { data, error } = await apiClient.storage
         .from(signedUrlBucket)
         .createSignedUrl(signedUrlPath, signedUrlExpiry);
       if (error) throw error;
@@ -1310,7 +1310,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
                 </p>
               </div>
 
-              {provider === "supabase" ? (
+              {provider === "apiClient" ? (
                 <div className="space-y-4">
                   <div className="rounded-lg border border-border bg-muted/30 p-4 flex items-start gap-3">
                     <Cloud className="w-5 h-5 text-primary mt-0.5" />
@@ -1353,16 +1353,16 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
                         setTestingConnection(true);
                         setConnectionTestResult(null);
                         try {
-                          const { data: { session } } = await supabase.auth.getSession();
+                          const { data: { session } } = await apiClient.auth.getSession();
                           const res = await fetch(
-                            `${process.env.VITE_SUPABASE_URL}/functions/v1/test-storage-connection`,
+                            `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/test-storage-connection`,
                             {
                               method: "POST",
                               headers: {
                                 "Content-Type": "application/json",
                                 Authorization: `Bearer ${session?.access_token}`,
                               },
-                              body: JSON.stringify({ provider: "supabase", config: {} }),
+                              body: JSON.stringify({ provider: "apiClient", config: {} }),
                             }
                           );
                           const result = await res.json();
@@ -1616,7 +1616,7 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
                   )}
 
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setProvider("supabase")}>
+                    <Button variant="outline" onClick={() => setProvider("apiClient")}>
                       Cancel
                     </Button>
                     <Button
@@ -1645,9 +1645,9 @@ export function StorageSettings({ loading: externalLoading }: StorageSettingsPro
                           } else if (provider === "local") {
                             configPayload.local_storage_path = providerConfig.storagePath;
                           }
-                          const { data: { session } } = await supabase.auth.getSession();
+                          const { data: { session } } = await apiClient.auth.getSession();
                           const res = await fetch(
-                            `${process.env.VITE_SUPABASE_URL}/functions/v1/test-storage-connection`,
+                            `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/test-storage-connection`,
                             {
                               method: "POST",
                               headers: {

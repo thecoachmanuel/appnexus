@@ -15,7 +15,7 @@ export const useSubscriptionPlans = () => {
         console.error("Error fetching plans:", plansResult.error);
       }
 
-      const activePlans = (plansResult.data || []).filter(p => p.is_active);
+      const activePlans = (plansResult.data || []).filter((p: any) => p.is_active);
       setPlans(activePlans);
     } catch (error) {
       console.error("Error fetching plans:", error);

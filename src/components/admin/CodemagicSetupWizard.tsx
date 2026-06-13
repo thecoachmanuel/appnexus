@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Server, CheckCircle, AlertCircle, ArrowRight, ArrowLeft,
@@ -50,7 +50,7 @@ export const CodemagicSetupWizard = ({ onClose }: { onClose?: () => void }) => {
   // Fetch existing config on mount
   useEffect(() => {
     const loadExisting = async () => {
-      const { data } = await supabase
+      const { data } = await apiClient
         .from("api_configurations")
         .select("config")
         .eq("provider", "codemagic")
@@ -133,7 +133,7 @@ export const CodemagicSetupWizard = ({ onClose }: { onClose?: () => void }) => {
         : null;
 
       // Fetch ALL existing codemagic configs to deduplicate
-      const { data: allConfigs } = await supabase
+      const { data: allConfigs } = await apiClient
         .from("api_configurations")
         .select("id")
         .eq("provider", "codemagic")
@@ -143,19 +143,19 @@ export const CodemagicSetupWizard = ({ onClose }: { onClose?: () => void }) => {
         // Keep the first (most recent), delete the rest
         const keepId = allConfigs[0].id;
         if (allConfigs.length > 1) {
-          const duplicateIds = allConfigs.slice(1).map((c) => c.id);
-          await supabase.from("api_configurations").delete().in("id", duplicateIds);
+          const duplicateIds = allConfigs.slice(1).map((c: any) => c.id);
+          await apiClient.from("api_configurations").delete().in("id", duplicateIds);
           console.log(`Cleaned up ${duplicateIds.length} duplicate Codemagic config(s)`);
         }
         // Update the surviving record
-        await supabase.from("api_configurations").update({
+        await apiClient.from("api_configurations").update({
           config: configPayload,
           api_key_masked: masked,
           is_active: true,
         }).eq("id", keepId);
       } else {
         // No existing config — insert new
-        await supabase.from("api_configurations").insert({
+        await apiClient.from("api_configurations").insert({
           name: "Codemagic",
           provider: "codemagic",
           config: configPayload,
@@ -196,10 +196,10 @@ export const CodemagicSetupWizard = ({ onClose }: { onClose?: () => void }) => {
 
       // Step 3: Check if the edge function is deployed
       setVerifyMessage("Checking cloud-build edge function...");
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await apiClient.auth.getSession();
       if (session?.access_token) {
-        const supabaseUrl = process.env.VITE_SUPABASE_URL;
-        const edgeRes = await fetch(`${supabaseUrl}/functions/v1/cloud-build`, {
+        const apiClientUrl = process.env.NEXT_PUBLIC_API_URL;
+        const edgeRes = await fetch(`${apiClientUrl}/functions/v1/cloud-build`, {
           method: "OPTIONS",
         });
         if (!edgeRes.ok && edgeRes.status !== 204) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -67,9 +67,10 @@ const AppBuilder = () => {
   });
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        <Navbar />
+    <Suspense fallback={null}>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background">
+          <Navbar />
         
         <main className="pt-20 sm:pt-24 md:pt-28 pb-24 md:pb-16">
           <div className="container mx-auto px-3 sm:px-4 md:px-6">
@@ -151,7 +152,8 @@ const AppBuilder = () => {
         
         <AIAssistant currentStep={currentStep} config={config} onUpdateConfig={updateConfig} />
       </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </Suspense>
   );
 };
 

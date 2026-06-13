@@ -83,7 +83,7 @@ const PlatformsSection = () => {
                 
                 {/* CTA Button */}
                 <Button asChild variant="outline" size="sm" className="w-full group">
-                  <Link to="/builder">
+                  <Link href="/builder">
                     Get Started
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Link>

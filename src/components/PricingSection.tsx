@@ -84,7 +84,7 @@ const PricingSection = () => {
     try {
       const { data, error } = await plansApi.list();
       if (error) throw error;
-      const activePlans = (data || []).filter(p => p.is_active).map(p => ({
+      const activePlans = (data || []).filter((p: any) => p.is_active).map((p: any) => ({
         id: p.id,
         name: p.name,
         tier: p.tier,
@@ -224,7 +224,7 @@ const PricingSection = () => {
                       className="w-full"
                       asChild
                     >
-                      <Link to="/subscription">
+                      <Link href="/subscription">
                         {getCTA(plan.tier)}
                       </Link>
                     </Button>

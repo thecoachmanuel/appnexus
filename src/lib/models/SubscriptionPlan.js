@@ -13,4 +13,4 @@ const subscriptionPlanSchema = new mongoose.Schema({
   features: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
-export const SubscriptionPlan = mongoose.model('SubscriptionPlan', subscriptionPlanSchema);
+export const SubscriptionPlan = mongoose.models.SubscriptionPlan || mongoose.model('SubscriptionPlan', subscriptionPlanSchema);

@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { CreditCard, Bitcoin, Building2, ArrowRight, Loader2, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 
 type PaymentMethod = "stripe" | "paypal" | "crypto" | "bank_transfer";
 
@@ -47,22 +46,10 @@ export const PaymentMethodSelector = ({
 
   const checkPaymentGatewayStatus = async () => {
     try {
-      const { data } = await supabase
-        .from("payment_gateway_configs")
-        .select("gateway, is_enabled")
-        .in("gateway", ["paypal", "coinbase"]);
-
-      if (data) {
-        const paypal = data.find(g => g.gateway === "paypal");
-        const coinbase = data.find(g => g.gateway === "coinbase");
-        
-        if (paypal?.is_enabled) {
-          setPaypalEnabled(true);
-        }
-        if (coinbase?.is_enabled) {
-          setCryptoEnabled(true);
-        }
-      }
+      // Payment gateway config is managed via admin settings
+      // Defaults: only stripe and bank_transfer enabled
+      setPaypalEnabled(false);
+      setCryptoEnabled(false);
     } catch {
       // Gateways not configured
     }

@@ -24,7 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface CoinbaseConfig {
   api_key: string;
@@ -67,7 +67,7 @@ export const CoinbaseConfiguration = () => {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "coinbase")
@@ -95,7 +95,7 @@ export const CoinbaseConfiguration = () => {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await apiClient
         .from("payment_gateway_configs")
         .update({
           is_enabled: config?.is_enabled ?? false,
@@ -181,7 +181,7 @@ export const CoinbaseConfiguration = () => {
     setShowSecrets((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const webhookUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/coinbase-webhook`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/coinbase-webhook`;
 
   if (loading) {
     return (

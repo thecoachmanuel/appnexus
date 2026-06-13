@@ -137,7 +137,7 @@ export const SubscriptionStatusBanner = () => {
 
           {/* Upgrade/Manage Button */}
           <Button variant="accent" size="sm" className="h-9 sm:h-10 shrink-0" asChild>
-            <Link to="/subscription">
+            <Link href="/subscription">
               {plan?.tier === "free" ? "Upgrade" : "Manage"}
               <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
             </Link>

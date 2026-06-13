@@ -2,7 +2,7 @@
  * Demo Mode Utility
  * 
  * Controls demo/test mode via:
- * 1. VITE_DEMO_MODE env variable (primary override)
+ * 1. NEXT_PUBLIC_DEMO_MODE env variable (primary override)
  * 2. system_settings.demo_mode database setting (fallback)
  * 
  * When demo mode is OFF, demo accounts are treated as regular accounts.

@@ -9,4 +9,4 @@ const creditPackSchema = new mongoose.Schema({
   stripe_price_id: { type: String, default: null }
 }, { timestamps: true });
 
-export const CreditPack = mongoose.model('CreditPack', creditPackSchema);
+export const CreditPack = mongoose.models.CreditPack || mongoose.model('CreditPack', creditPackSchema);

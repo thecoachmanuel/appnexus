@@ -35,17 +35,17 @@ export const useCreditHistory = (limit = 50) => {
 
       // Calculate stats
       const totalUsed = records
-        .filter((r) => r.amount > 0)
-        .reduce((sum, r) => sum + r.amount, 0);
+        .filter((r: any) => r.amount > 0)
+        .reduce((sum: number, r: any) => sum + r.amount, 0);
 
       const totalAdded = records
-        .filter((r) => r.amount < 0)
-        .reduce((sum, r) => sum + Math.abs(r.amount), 0);
+        .filter((r: any) => r.amount < 0)
+        .reduce((sum: number, r: any) => sum + Math.abs(r.amount), 0);
 
       const usageByType: Record<string, number> = {};
       records
-        .filter((r) => r.amount > 0)
-        .forEach((r) => {
+        .filter((r: any) => r.amount > 0)
+        .forEach((r: any) => {
           usageByType[r.action_type] = (usageByType[r.action_type] || 0) + r.amount;
         });
 
@@ -59,7 +59,7 @@ export const useCreditHistory = (limit = 50) => {
         last30Days.set(key, { used: 0, added: 0 });
       }
 
-      records.forEach((r) => {
+      records.forEach((r: any) => {
         const date = r.created_at.split("T")[0];
         if (last30Days.has(date)) {
           const current = last30Days.get(date)!;

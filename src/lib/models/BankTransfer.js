@@ -11,4 +11,4 @@ const bankTransferSchema = new mongoose.Schema({
   admin_notes: { type: String, default: null }
 }, { timestamps: true });
 
-export const BankTransfer = mongoose.model('BankTransfer', bankTransferSchema);
+export const BankTransfer = mongoose.models.BankTransfer || mongoose.model('BankTransfer', bankTransferSchema);

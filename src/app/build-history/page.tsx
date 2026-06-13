@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BuildDetailsDrawer } from "@/components/builder/BuildDetailsDrawer";
 import AppleIcon from "@/components/builder/AppleIcon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { projectsApi, buildApi, AppBuild } from "@/lib/api";
+import { projectsApi, buildApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -190,9 +190,9 @@ const BuildHistory = () => {
 
   const stats = {
     total: builds?.length || 0,
-    completed: builds?.filter(b => b.status === "completed" || b.status === "complete").length || 0,
-    failed: builds?.filter(b => b.status === "failed").length || 0,
-    pending: builds?.filter(b => b.status === "pending" || b.status === "building").length || 0,
+    completed: builds?.filter((b: any) => b.status === "completed" || b.status === "complete").length || 0,
+    failed: builds?.filter((b: any) => b.status === "failed").length || 0,
+    pending: builds?.filter((b: any) => b.status === "pending" || b.status === "building").length || 0,
   };
 
   return (

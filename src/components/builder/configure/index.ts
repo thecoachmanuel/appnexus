@@ -6,7 +6,6 @@ export { default as CollapsibleSection } from "./CollapsibleSection";
 export { default as ColorPicker } from "./ColorPicker";
 export { default as FeatureSelector } from "./FeatureSelector";
 export { default as IconStyleSelector } from "./IconStyleSelector";
-export { default as MiniPhonePreview } from "./MiniPhonePreview";
 export { default as NavItemEditor, getIconComponent } from "./NavItemEditor";
 export { default as NavigationStyleSelector } from "./NavigationStyleSelector";
 export { default as ProjectAssetsUploader } from "./ProjectAssetsUploader";

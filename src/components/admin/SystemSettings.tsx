@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import type { SettingsAuditLog } from "@/hooks/useAdminData";
 import { StorageSettings } from "@/components/admin/StorageSettings";
 
@@ -98,7 +98,7 @@ const defaultSettings = {
     admob_rewarded_id: { value: "", label: "Default Rewarded Ad Unit ID", type: "text", description: "AdMob rewarded ad unit ID" },
   },
   storage: {
-    storage_provider: { value: "supabase", label: "Storage Provider", type: "select", options: ["supabase", "s3", "gcs", "cloudflare_r2", "local"] },
+    storage_provider: { value: "mongodb", label: "Storage Provider", type: "select", options: ["mongodb", "s3", "gcs", "cloudflare_r2", "local"] },
     // S3 config
     s3_access_key: { value: "", label: "AWS Access Key ID", type: "text", secret: true, provider: "s3" },
     s3_secret_key: { value: "", label: "AWS Secret Access Key", type: "text", secret: true, provider: "s3" },
@@ -283,18 +283,18 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
   const handleTestStorageConnection = async () => {
     setTestingConnection(true);
     setConnectionTestResult(null);
-    const provider = getLocalValue('storage', 'storage_provider', 'supabase') as string;
+    const provider = getLocalValue('storage', 'storage_provider', 'mongodb') as string;
     
     // Gather provider-specific config
     const requiredKeys: Record<string, string[]> = {
-      supabase: [],
+      mongodb: [],
       s3: ['s3_access_key', 's3_secret_key', 's3_bucket'],
       gcs: ['gcs_project_id', 'gcs_bucket'],
       cloudflare_r2: ['r2_account_id', 'r2_access_key', 'r2_secret_key', 'r2_bucket'],
       local: ['local_storage_path'],
     };
     const allKeys: Record<string, string[]> = {
-      supabase: [],
+      mongodb: [],
       s3: ['s3_access_key', 's3_secret_key', 's3_region', 's3_bucket', 's3_endpoint'],
       gcs: ['gcs_project_id', 'gcs_bucket', 'gcs_service_account_key'],
       cloudflare_r2: ['r2_account_id', 'r2_access_key', 'r2_secret_key', 'r2_bucket'],
@@ -308,7 +308,7 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
 
     // Client-side validation: check required fields before calling the edge function
     const missing = (requiredKeys[provider] || []).filter(k => !config[k] || String(config[k]).trim() === '');
-    if (missing.length > 0 && provider !== 'supabase') {
+    if (missing.length > 0 && provider !== 'mongodb') {
       const labels = missing.map(k => k.replace(/^(s3_|gcs_|r2_|local_)/, '').replace(/_/g, ' '));
       setConnectionTestResult({ success: false, message: `Please fill in required fields: ${labels.join(', ')}` });
       setTestingConnection(false);
@@ -316,7 +316,7 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('test-storage-connection', {
+      const { data, error } = await apiClient.functions.invoke('test-storage-connection', {
         body: { provider, config },
       });
 
@@ -324,15 +324,16 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
         setConnectionTestResult(data as { success: boolean; message: string; details?: string });
       } else if (error) {
         // For non-2xx responses, try to parse the error context
+        const errObj = error as any;
         try {
-          const errorBody = error.context ? await error.context.json() : null;
+          const errorBody = errObj.context ? await errObj.context.json() : null;
           if (errorBody?.message) {
             setConnectionTestResult({ success: false, message: errorBody.message, details: errorBody.details });
           } else {
-            setConnectionTestResult({ success: false, message: error.message || 'Connection test failed' });
+            setConnectionTestResult({ success: false, message: errObj.message || 'Connection test failed' });
           }
         } catch {
-          setConnectionTestResult({ success: false, message: error.message || 'Connection test failed' });
+          setConnectionTestResult({ success: false, message: errObj.message || 'Connection test failed' });
         }
       } else {
         setConnectionTestResult({ success: false, message: 'Unexpected response from server' });
@@ -359,8 +360,8 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
 
   // Merge DB settings with defaults, normalizing category names
   const normalizeCategory = (cat: string) => categoryAliases[cat] || cat;
-  const existingCategories = [...new Set(settings.map((s) => normalizeCategory(s.category)))];
-  const allCategories = [...new Set([...Object.keys(defaultSettings), ...existingCategories])];
+  const existingCategories = Array.from(new Set(settings.map((s) => normalizeCategory(s.category))));
+  const allCategories = Array.from(new Set([...Object.keys(defaultSettings), ...existingCategories]));
 
   const renderField = (
     fieldKey: string, 
@@ -797,7 +798,7 @@ export const SystemSettings = ({ settings, auditLog = [], onUpdate, onUpsert, on
                           const fieldConfig = config as any;
                           // Filter provider-specific fields based on selected storage provider
                           if (fieldConfig.provider && category === 'storage') {
-                            const selectedProvider = getLocalValue('storage', 'storage_provider', 'supabase') as string;
+                            const selectedProvider = getLocalValue('storage', 'storage_provider', 'mongodb') as string;
                             if (fieldConfig.provider !== selectedProvider) return null;
                           }
                           return renderField(fieldKey, fieldConfig, category);

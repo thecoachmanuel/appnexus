@@ -31,7 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { userApi, storageApi } from "@/lib/api";
 import { Moon, Sun, Monitor, Bell, Shield, RotateCcw, Languages, Palette, User, Upload, Loader2, Trash2, AlertTriangle, Download, FileText, Camera, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -233,7 +233,7 @@ const Settings = () => {
 
       // Sign out and redirect
       await signOut();
-      navigate("/");
+      router.push("/");
     } catch (error: any) {
       toast({
         title: "Error",

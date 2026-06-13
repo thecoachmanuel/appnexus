@@ -16,4 +16,4 @@ const systemSettingSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-export const SystemSetting = mongoose.model('SystemSetting', systemSettingSchema);
+export const SystemSetting = mongoose.models.SystemSetting || mongoose.model('SystemSetting', systemSettingSchema);

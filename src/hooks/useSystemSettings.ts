@@ -110,8 +110,7 @@ async function fetchSettings() {
   }
 }
 
-// Initial fetch
-fetchSettings();
+let fetchStarted = false;
 
 /**
  * Hook to access system settings across the app.
@@ -121,6 +120,10 @@ export function useSystemSettings() {
   const [, forceUpdate] = useState(0);
 
   useEffect(() => {
+    if (!fetchStarted && typeof window !== 'undefined') {
+      fetchStarted = true;
+      fetchSettings();
+    }
     const listener = () => forceUpdate((n) => n + 1);
     globalListeners.push(listener);
     return () => {

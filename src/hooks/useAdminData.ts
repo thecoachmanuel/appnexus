@@ -115,7 +115,7 @@ export const useAdminData = () => {
       return;
     }
     setEmailTemplates(
-      (data || []).map((t) => ({
+      (data || []).map((t: any) => ({
         ...t,
         variables: Array.isArray(t.variables) ? t.variables : [],
       }))
@@ -205,7 +205,7 @@ export const useAdminData = () => {
     return !error;
   };
 
-  const updateSetting = async (id: string, value: Record<string, unknown>) => {
+  const updateSetting = async (id: string, value: any) => {
     const { error } = await adminApi.updateSetting(id, value);
     if (!error) {
       await fetchSettings();
@@ -214,7 +214,7 @@ export const useAdminData = () => {
     return !error;
   };
 
-  const upsertSetting = async (key: string, value: unknown, category: string) => {
+  const upsertSetting = async (key: string, value: any, category: string) => {
     const { error } = await adminApi.upsertSetting(key, value, category);
     if (!error) {
       await fetchSettings();

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Home, Plus, Settings, CreditCard, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavBadges } from "@/hooks/useNavBadges";
@@ -42,7 +43,7 @@ const MobileBottomNav = () => {
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                href={item.path}
                 className="relative -mt-5 flex flex-col items-center"
               >
                 <div className={cn(
@@ -66,7 +67,7 @@ const MobileBottomNav = () => {
           return (
             <Link
               key={item.path}
-              to={item.path}
+              href={item.path}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 relative",
                 isActive ? "text-primary" : "text-muted-foreground"

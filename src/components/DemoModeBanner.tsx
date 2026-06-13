@@ -71,7 +71,7 @@ export function DemoModeBanner() {
           
           {isAdminDemo && (
             <Button variant="outline" size="sm" asChild className="shrink-0">
-              <Link to="/admin">
+              <Link href="/admin">
                 <UserCog className="w-4 h-4 mr-2" />
                 Admin Panel
               </Link>

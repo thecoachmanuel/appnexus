@@ -19,7 +19,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, RefreshCw, Eye, Trash2, Clock, AlertCircle, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { toast } from "sonner";
 
 interface WebhookLog {
@@ -61,7 +61,7 @@ export const WebhookEventLogs = () => {
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await apiClient
       .from("webhook_event_logs")
       .select("*")
       .order("created_at", { ascending: false })
@@ -102,7 +102,7 @@ export const WebhookEventLogs = () => {
   const handleRetry = async (log: WebhookLog) => {
     setRetrying(log.id);
     try {
-      const { data, error } = await supabase.functions.invoke("retry-webhook", {
+      const { data, error } = await apiClient.functions.invoke("retry-webhook", {
         body: { webhook_log_id: log.id },
       });
       if (error) throw error;
@@ -121,7 +121,7 @@ export const WebhookEventLogs = () => {
 
   const handleClearLogs = async () => {
     if (!confirm("Delete all webhook event logs? This cannot be undone.")) return;
-    const { error } = await supabase.from("webhook_event_logs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    const { error } = await apiClient.from("webhook_event_logs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (error) {
       toast.error("Failed to clear logs");
     } else {

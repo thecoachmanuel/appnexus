@@ -31,7 +31,7 @@ export const PageHeader = ({
       <div className="flex items-start gap-3 sm:gap-4">
         {backLink && (
           <Button variant="ghost" size="icon" className="shrink-0 mt-1" asChild>
-            <Link to={backLink}>
+            <Link href={backLink}>
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>

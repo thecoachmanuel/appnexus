@@ -53,6 +53,7 @@ export const useThemeStore = create<ThemeState>()(
 
 // Initialize theme on module load
 const initializeTheme = () => {
+  if (typeof window === 'undefined') return;
   const stored = localStorage.getItem('app-theme');
   const theme = stored ? (JSON.parse(stored).state?.theme as Theme) : 'dark';
   

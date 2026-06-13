@@ -6,6 +6,6 @@ export async function GET() {
   const projects = await AppProject.find({});
   return NextResponse.json(projects);
 }
-export async function POST(req) {
+export async function POST(req: Request) {
   return NextResponse.json({ message: 'Created' });
 }

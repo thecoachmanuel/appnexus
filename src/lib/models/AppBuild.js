@@ -53,4 +53,4 @@ const appBuildSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-export const AppBuild = mongoose.model('AppBuild', appBuildSchema);
+export const AppBuild = mongoose.models.AppBuild || mongoose.model('AppBuild', appBuildSchema);

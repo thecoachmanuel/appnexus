@@ -1422,7 +1422,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
                               : `Insufficient credits: need ${creditsPerBuild}, have ${userCredits}`
                             }
                             {!hasEnough && (
-                              <Link to="/subscription" className="ml-1 underline text-primary hover:text-primary/80">
+                              <Link href="/subscription" className="ml-1 underline text-primary hover:text-primary/80">
                                 Buy Credits
                               </Link>
                             )}
@@ -1784,7 +1784,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
                 Build Another
               </Button>
               <Button variant="accent" size="sm" asChild>
-                <Link to="/dashboard">
+                <Link href="/dashboard">
                   <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
                   Dashboard
                 </Link>

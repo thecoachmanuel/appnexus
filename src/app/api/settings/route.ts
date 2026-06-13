@@ -6,4 +6,4 @@ export async function GET() {
   const settings = await SystemSetting.find({});
   return NextResponse.json(settings);
 }
-export async function POST(req) { return NextResponse.json({}); }
+export async function POST(req: Request) { return NextResponse.json({}); }

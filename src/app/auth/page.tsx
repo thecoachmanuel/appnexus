@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +61,7 @@ const Auth = () => {
   const [isResending, setIsResending] = useState(false);
 
   const { signIn, signUp, signInWithGoogle, signInWithMagicLink, resendVerificationEmail, resetPassword, user, loading } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
 
   const isLogin = authView === 'login';
@@ -71,9 +71,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard");
+      router.push("/dashboard");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, router]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -156,7 +156,7 @@ const Auth = () => {
           toast({ title: "Login Failed", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "Welcome back!", description: "You have successfully signed in." });
-          navigate("/dashboard");
+          router.push("/dashboard");
         }
       } else {
         const { error } = await signUp(email, password, displayName);
@@ -250,7 +250,7 @@ const Auth = () => {
                ) : isVerifyEmail ? (
                  <CheckCircle2 className="w-6 h-6 text-primary-foreground" />
                ) : (
-                <img src={appLogo} alt={settings.app_name} className="w-12 h-12 object-contain" />
+                <img src={appLogo.src} alt={settings.app_name} className="w-12 h-12 object-contain" />
               )}
             </div>
             <h1 className="text-xl font-semibold text-foreground">

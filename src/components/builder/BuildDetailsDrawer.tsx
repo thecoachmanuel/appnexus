@@ -204,7 +204,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
                 <span className="text-muted-foreground flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Website URL</span>
                 <span className="text-foreground truncate max-w-[200px]">{build.website_url}</span>
               </div>
-              {config.primaryColor && (
+              {Boolean(config.primaryColor) && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-2"><Palette className="w-3.5 h-3.5" /> Primary Color</span>
                   <span className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
                   </span>
                 </div>
               )}
-              {config.accentColor && (
+              {Boolean(config.accentColor) && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-2"><Palette className="w-3.5 h-3.5" /> Accent Color</span>
                   <span className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
                   </span>
                 </div>
               )}
-              {config.navigationStyle && (
+              {Boolean(config.navigationStyle) && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Navigation</span>
                   <span className="text-foreground">{config.navigationStyle as string}</span>
@@ -252,7 +252,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
               </h3>
               <div className="rounded-lg bg-red-500/5 border border-red-500/20 p-4 space-y-3">
                 {/* Step name */}
-                {(config.failedStep || build.error_message.includes("Step:")) && (
+                {(Boolean(config.failedStep) || build.error_message.includes("Step:")) && (
                   <div>
                     <div className="text-xs text-muted-foreground mb-1">Failed Step</div>
                     <p className="text-sm font-medium text-red-500">
@@ -268,7 +268,7 @@ export function BuildDetailsDrawer({ build, open, onOpenChange }: BuildDetailsDr
                   </p>
                 </div>
                 {/* Log excerpt */}
-                {config.failedStepLog && (
+                {Boolean(config.failedStepLog) && (
                   <div>
                     <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                       <Terminal className="w-3 h-3" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { format } from "date-fns";
 import { userApi, Transaction, Invoice } from "@/lib/api";
@@ -258,7 +258,7 @@ const PaymentHistory = () => {
             description="View your transactions and download invoices"
           >
             <Button variant="outline" asChild>
-              <Link to="/subscription">
+              <Link href="/subscription">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Subscription
               </Link>

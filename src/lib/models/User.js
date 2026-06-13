@@ -28,10 +28,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
   stripe_customer_id: {
     type: String,
     default: null
   }
 }, { timestamps: true });
 
-export const User = mongoose.model('User', userSchema);
+export const User = mongoose.models.User || mongoose.model('User', userSchema);

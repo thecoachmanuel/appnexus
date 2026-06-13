@@ -41,7 +41,7 @@ const Footer = () => {
               <li><a href="/#features" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Features</a></li>
               <li><a href="/#pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Pricing</a></li>
               <li><a href="/#platforms" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Platforms</a></li>
-              <li><Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Help Center</Link></li>
+              <li><Link href="/help" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Help Center</Link></li>
             </ul>
           </div>
 
@@ -60,10 +60,10 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold text-foreground mb-4">Legal</h4>
             <ul className="space-y-3">
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors text-sm">GDPR</Link></li>
-              <li><Link to="/privacy#cookies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cookie Policy</Link></li>
+              <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors text-sm">GDPR</Link></li>
+              <li><Link href="/privacy#cookies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>

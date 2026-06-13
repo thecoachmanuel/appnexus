@@ -9,4 +9,4 @@ const emailTemplateSchema = new mongoose.Schema({
   is_active: { type: Boolean, default: true }
 }, { timestamps: true });
 
-export const EmailTemplate = mongoose.model('EmailTemplate', emailTemplateSchema);
+export const EmailTemplate = mongoose.models.EmailTemplate || mongoose.model('EmailTemplate', emailTemplateSchema);

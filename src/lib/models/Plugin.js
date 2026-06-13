@@ -8,4 +8,4 @@ const pluginSchema = new mongoose.Schema({
   version: { type: String, default: '1.0.0' }
 }, { timestamps: true });
 
-export const Plugin = mongoose.model('Plugin', pluginSchema);
+export const Plugin = mongoose.models.Plugin || mongoose.model('Plugin', pluginSchema);

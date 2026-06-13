@@ -24,7 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface StripeConfig {
   secret_key: string;
@@ -82,7 +82,7 @@ export const StripeConfiguration = () => {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "stripe")
@@ -100,7 +100,7 @@ export const StripeConfiguration = () => {
         setLiveConfig(liveData || { secret_key: "", publishable_key: "", webhook_secret: "" });
       } else {
         // Create default config if doesn't exist
-        const { data: newData, error: insertError } = await supabase
+        const { data: newData, error: insertError } = await apiClient
           .from("payment_gateway_configs")
           .insert({
             gateway: "stripe",
@@ -126,20 +126,20 @@ export const StripeConfiguration = () => {
 
   const checkPriceConfiguration = async () => {
     try {
-      const { data: plans } = await supabase
+      const { data: plans } = await apiClient
         .from("subscription_plans")
         .select("stripe_price_id, stripe_yearly_price_id, tier")
         .neq("tier", "free");
 
-      const { data: packs } = await supabase
+      const { data: packs } = await apiClient
         .from("credit_packs")
         .select("stripe_price_id")
         .eq("is_active", true);
 
       setPriceStatus({
-        hasMonthlyPrices: plans?.some(p => p.stripe_price_id) ?? false,
-        hasYearlyPrices: plans?.some(p => p.stripe_yearly_price_id) ?? false,
-        hasCreditPackPrices: packs?.some(p => p.stripe_price_id) ?? false,
+        hasMonthlyPrices: plans?.some((p: any) => p.stripe_price_id) ?? false,
+        hasYearlyPrices: plans?.some((p: any) => p.stripe_yearly_price_id) ?? false,
+        hasCreditPackPrices: packs?.some((p: any) => p.stripe_price_id) ?? false,
       });
     } catch (error) {
       console.error("Error checking price config:", error);
@@ -149,7 +149,7 @@ export const StripeConfiguration = () => {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await apiClient
         .from("payment_gateway_configs")
         .update({
           is_enabled: config?.is_enabled ?? true,
@@ -240,7 +240,7 @@ export const StripeConfiguration = () => {
     setShowSecrets((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const webhookUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/stripe-webhook`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/stripe-webhook`;
 
   if (loading) {
     return (

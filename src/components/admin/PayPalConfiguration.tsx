@@ -24,7 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface PayPalConfig {
   client_id: string;
@@ -70,7 +70,7 @@ export const PayPalConfiguration = () => {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "paypal")
@@ -98,7 +98,7 @@ export const PayPalConfiguration = () => {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await apiClient
         .from("payment_gateway_configs")
         .update({
           is_enabled: config?.is_enabled ?? false,
@@ -191,7 +191,7 @@ export const PayPalConfiguration = () => {
     setShowSecrets((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const webhookUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/paypal-webhook`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/paypal-webhook`;
 
   if (loading) {
     return (

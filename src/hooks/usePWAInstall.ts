@@ -60,11 +60,11 @@ export const usePWAInstall = () => {
     }
   }, [deferredPrompt]);
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = typeof window !== 'undefined' && /Android/.test(navigator.userAgent);
   const isDesktop = !isIOS && !isAndroid;
-  const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
-  const isEdge = /Edg/.test(navigator.userAgent);
+  const isChrome = typeof window !== 'undefined' && /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+  const isEdge = typeof window !== 'undefined' && /Edg/.test(navigator.userAgent);
 
   return {
     isInstallable,

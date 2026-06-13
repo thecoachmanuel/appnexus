@@ -23,7 +23,7 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { PayPalConfiguration } from "./PayPalConfiguration";
 import { PayPalBillingPlans } from "./PayPalBillingPlans";
 import { CoinbaseConfiguration } from "./CoinbaseConfiguration";
@@ -105,7 +105,7 @@ export const PaymentGatewayManager = () => {
   // Load bank details from system_settings
   const loadBankDetails = useCallback(async () => {
     try {
-      const { data } = await supabase
+      const { data } = await apiClient
         .from("system_settings")
         .select("value")
         .eq("key", "bank_transfer_details")
@@ -122,21 +122,21 @@ export const PaymentGatewayManager = () => {
   const saveBankDetails = async () => {
     setSavingBank(true);
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await apiClient
         .from("system_settings")
         .select("id")
         .eq("key", "bank_transfer_details")
         .maybeSingle();
 
-      const jsonValue = bankDetails as unknown as import("@/integrations/supabase/types").Json;
+      const jsonValue = bankDetails as any;
       if (existing) {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("system_settings")
           .update({ value: jsonValue })
           .eq("key", "bank_transfer_details");
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("system_settings")
           .insert([{ key: "bank_transfer_details", value: jsonValue, category: "payments", description: "Bank transfer details for manual payments" }]);
         if (error) throw error;
@@ -162,7 +162,7 @@ export const PaymentGatewayManager = () => {
 
   const checkPayPalStatus = async () => {
     try {
-      const { data } = await supabase
+      const { data } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "paypal")
@@ -185,7 +185,7 @@ export const PaymentGatewayManager = () => {
 
   const checkCoinbaseStatus = async () => {
     try {
-      const { data } = await supabase
+      const { data } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "coinbase")
@@ -208,25 +208,25 @@ export const PaymentGatewayManager = () => {
 
   const checkStripeConfiguration = async () => {
     try {
-      const { data: stripeConfig } = await supabase
+      const { data: stripeConfig } = await apiClient
         .from("payment_gateway_configs")
         .select("*")
         .eq("gateway", "stripe")
         .single();
 
-      const { data: plans } = await supabase
+      const { data: plans } = await apiClient
         .from("subscription_plans")
         .select("stripe_price_id, stripe_yearly_price_id, tier")
         .neq("tier", "free");
 
-      const { data: packs } = await supabase
+      const { data: packs } = await apiClient
         .from("credit_packs")
         .select("stripe_price_id")
         .eq("is_active", true);
 
-      const hasMonthlyPrices = plans?.some(p => p.stripe_price_id) ?? false;
-      const hasYearlyPrices = plans?.some(p => p.stripe_yearly_price_id) ?? false;
-      const hasCreditPackPrices = packs?.some(p => p.stripe_price_id) ?? false;
+      const hasMonthlyPrices = plans?.some((p: any) => p.stripe_price_id) ?? false;
+      const hasYearlyPrices = plans?.some((p: any) => p.stripe_yearly_price_id) ?? false;
+      const hasCreditPackPrices = packs?.some((p: any) => p.stripe_price_id) ?? false;
 
       const configData = stripeConfig?.is_test_mode ? stripeConfig?.sandbox_config : stripeConfig?.live_config;
 
@@ -288,7 +288,7 @@ export const PaymentGatewayManager = () => {
   };
 
 
-  const webhookUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/stripe-webhook`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/stripe-webhook`;
 
   return (
     <div className="space-y-4">

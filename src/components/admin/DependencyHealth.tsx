@@ -19,16 +19,16 @@ import {
   Terminal,
 } from "lucide-react";
 
-// Build timestamp - updated at build time via Vite
+// Build timestamp - updated at build time via Next.js
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 // Core dependency versions (from package.json)
 const dependencies = {
   core: [
     { name: "React", version: "18.3.1", category: "Framework" },
-    { name: "TypeScript", version: "5.8.3", category: "Language" },
-    { name: "Vite", version: "7.3.1", category: "Build Tool" },
-    { name: "Tailwind CSS", version: "3.4.19", category: "Styling" },
+    { name: "Next.js", version: "14.2.3", category: "Framework" },
+    { name: "MongoDB", version: "6.0.0", category: "Database" },
+    { name: "Mongoose", version: "8.0.0", category: "ORM" },
   ],
   capacitor: [
     { name: "@capacitor/core", version: "8.0.1", category: "Core" },
@@ -46,7 +46,7 @@ const dependencies = {
     { name: "Recharts", version: "2.15.4", category: "Charts" },
   ],
   data: [
-    { name: "@supabase/supabase-js", version: "2.90.0", category: "Backend" },
+
     { name: "@tanstack/react-query", version: "5.83.0", category: "State" },
     { name: "Zustand", version: "5.0.9", category: "State" },
     { name: "React Hook Form", version: "7.61.1", category: "Forms" },

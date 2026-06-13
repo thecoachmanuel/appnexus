@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Smartphone, Menu, X, LogOut, Settings, Coins, Shield, Plus, ChevronDown, ChevronLeft, ChevronRight, FolderOpen, Trash2, Wrench, HelpCircle } from "lucide-react";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminExists } from "@/hooks/useAdminExists";
@@ -110,7 +111,7 @@ const Navbar = () => {
     }
     
     setIsOpen(false);
-  }, [pathname, navigate]);
+  }, [pathname, router]);
 
   const getNavLinkClass = (sectionId: string) => 
     cn(
@@ -204,7 +205,7 @@ const Navbar = () => {
       <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <ThemeAwareLogo />
             <span className="font-display text-base sm:text-xl font-bold text-foreground truncate">{settings.app_name}</span>
           </Link>
@@ -232,7 +233,7 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link to="/builder" className="cursor-pointer flex items-center gap-2 font-medium">
+                  <Link href="/builder" className="cursor-pointer flex items-center gap-2 font-medium">
                     <Plus className="w-4 h-4" />
                     New App
                   </Link>
@@ -262,11 +263,11 @@ const Navbar = () => {
                         </span>
                       )}
                     </DropdownMenuLabel>
-                    {paginatedProjects.map((project) => (
+                    {paginatedProjects.map((project: any) => (
                       <DropdownMenuItem key={project.id} className="p-0">
                         <div className="flex items-center justify-between w-full">
                           <Link 
-                            to={`/builder`} 
+                            href={`/builder`} 
                             className="flex-1 px-2 py-1.5 cursor-pointer flex flex-col items-start gap-0.5"
                           >
                             <span className="font-medium truncate max-w-[160px]">{project.app_name}</span>
@@ -286,7 +287,7 @@ const Navbar = () => {
                     ))}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer flex items-center gap-2 text-muted-foreground">
+                      <Link href="/dashboard" className="cursor-pointer flex items-center gap-2 text-muted-foreground">
                         <FolderOpen className="w-4 h-4" />
                         View All Projects
                       </Link>
@@ -317,32 +318,32 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
+                    <Link href="/dashboard" className="cursor-pointer">
                       <Smartphone className="w-4 h-4 mr-2" />
                       My Projects
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/subscription" className="cursor-pointer">
+                    <Link href="/subscription" className="cursor-pointer">
                       <Coins className="w-4 h-4 mr-2" />
                       Plans & Credits
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer">
+                    <Link href="/settings" className="cursor-pointer">
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/help" className="cursor-pointer">
+                    <Link href="/help" className="cursor-pointer">
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Help Center
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer flex items-center justify-between w-full">
+                      <Link href="/admin" className="cursor-pointer flex items-center justify-between w-full">
                         <span className="flex items-center">
                           <Shield className="w-4 h-4 mr-2" />
                           Admin Panel
@@ -364,17 +365,17 @@ const Navbar = () => {
               <>
                 {hasAdmin === false && (
                   <Button variant="outline" size="sm" asChild className="border-destructive/50 text-destructive hover:bg-destructive/10">
-                    <Link to="/setup">
+                    <Link href="/setup">
                       <Wrench className="w-4 h-4 mr-2" />
                       Setup Admin
                     </Link>
                   </Button>
                 )}
                 <Button variant="ghost" asChild>
-                  <Link to="/auth">Sign In</Link>
+                  <Link href="/auth">Sign In</Link>
                 </Button>
                 <Button variant="hero" size="lg" asChild>
-                  <Link to="/auth">Start Free</Link>
+                  <Link href="/auth">Start Free</Link>
                 </Button>
               </>
             )}
@@ -399,8 +400,7 @@ const Navbar = () => {
             <div className="py-2">
               <ThemeToggle />
             </div>
-            <Link 
-              to="/builder" 
+            <Link href="/builder" 
               onClick={() => setIsOpen(false)}
               className={cn(
                 "flex items-center gap-2 py-2 cursor-pointer",
@@ -412,8 +412,7 @@ const Navbar = () => {
               <Plus className="w-4 h-4" />
               New App
             </Link>
-            <Link 
-              to="/dashboard" 
+            <Link href="/dashboard" 
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 py-2 cursor-pointer text-muted-foreground hover:text-foreground"
             >
@@ -424,23 +423,23 @@ const Navbar = () => {
               {user ? (
                 <>
                   <Button variant="glass" className="w-full" asChild>
-                    <Link to="/dashboard">My Projects</Link>
+                    <Link href="/dashboard">My Projects</Link>
                   </Button>
                   <Button variant="glass" className="w-full" asChild>
-                    <Link to="/subscription">Plans & Credits</Link>
+                    <Link href="/subscription">Plans & Credits</Link>
                   </Button>
                   <Button variant="glass" className="w-full" asChild>
-                    <Link to="/settings">Settings</Link>
+                    <Link href="/settings">Settings</Link>
                   </Button>
                   <Button variant="glass" className="w-full" asChild>
-                    <Link to="/help">
+                    <Link href="/help">
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Help Center
                     </Link>
                   </Button>
                   {isAdmin && (
                     <Button variant="glass" className="w-full justify-between" asChild>
-                      <Link to="/admin">
+                      <Link href="/admin">
                         <span className="flex items-center gap-2">
                           <Shield className="w-4 h-4" />
                           Admin Panel
@@ -459,17 +458,17 @@ const Navbar = () => {
                 <>
                   {hasAdmin === false && (
                     <Button variant="outline" className="w-full border-destructive/50 text-destructive hover:bg-destructive/10" asChild>
-                      <Link to="/setup">
+                      <Link href="/setup">
                         <Wrench className="w-4 h-4 mr-2" />
                         Setup Admin
                       </Link>
                     </Button>
                   )}
                   <Button variant="ghost" className="w-full" asChild>
-                    <Link to="/auth">Sign In</Link>
+                    <Link href="/auth">Sign In</Link>
                   </Button>
                   <Button variant="hero" className="w-full" asChild>
-                    <Link to="/auth">Start Free</Link>
+                    <Link href="/auth">Start Free</Link>
                   </Button>
                 </>
               )}

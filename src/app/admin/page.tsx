@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
@@ -30,7 +31,7 @@ const Admin = () => {
   const isDataLoading = adminData.loading;
 
   if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return (() => { const router = useRouter(); useEffect(() => { router.push("/dashboard"); }, [router]); return null; })();
   }
 
   const renderSection = () => {

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { toast } from "sonner";
 import { Mail, Smartphone, Brain, Key, Save, Eye, EyeOff, CheckCircle2, XCircle, RefreshCw, Loader2, Server, Send } from "lucide-react";
@@ -137,7 +137,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
   }, []);
 
   const fetchConfigs = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await apiClient
       .from("api_configurations")
       .select("*")
       .in("provider", ["resend", "appetize", "ai", "codemagic"]);
@@ -150,7 +150,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
     const mapped: Record<string, IntegrationKey> = {};
     const values: Record<string, Record<string, string>> = {};
 
-    (data || []).forEach((row) => {
+    (data || []).forEach((row: any) => {
       mapped[row.provider] = {
         id: row.id,
         name: row.name,
@@ -196,7 +196,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
     const existing = configs[providerKey];
 
     if (existing?.id) {
-      const { error } = await supabase
+      const { error } = await apiClient
         .from("api_configurations")
         .update({
           config: configPayload,
@@ -212,7 +212,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
         toast.success(`${integration.label} configuration updated`);
       }
     } else {
-      const { error } = await supabase.from("api_configurations").insert({
+      const { error } = await apiClient.from("api_configurations").insert({
         name: integration.label,
         provider: providerKey,
         config: configPayload,
@@ -312,7 +312,7 @@ export const IntegrationsManager = ({ loading = false, isDemo = false }: { loadi
     }
     setSendingTestEmail(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-email", {
+      const { data, error } = await apiClient.functions.invoke("send-email", {
         body: {
           to: email,
           templateName: "test_email",

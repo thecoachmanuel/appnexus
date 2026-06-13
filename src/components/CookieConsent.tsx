@@ -103,8 +103,7 @@ const CookieConsent = () => {
                     We use cookies to enhance your browsing experience, serve
                     personalized content, and analyze our traffic. By clicking
                     "Accept All", you consent to our use of cookies.{" "}
-                    <Link
-                      to="/privacy"
+                    <Link href="/privacy"
                       className="text-primary hover:underline"
                     >
                       Read our Privacy Policy

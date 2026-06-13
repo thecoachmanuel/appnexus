@@ -15,4 +15,4 @@ const invoiceSchema = new mongoose.Schema({
   paid_at: { type: Date, default: null }
 }, { timestamps: true });
 
-export const Invoice = mongoose.model('Invoice', invoiceSchema);
+export const Invoice = mongoose.models.Invoice || mongoose.model('Invoice', invoiceSchema);

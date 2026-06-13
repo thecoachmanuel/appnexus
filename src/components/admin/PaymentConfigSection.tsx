@@ -11,7 +11,7 @@ import { PaymentGatewayManager } from "./PaymentGatewayManager";
 import { BankTransferManagement } from "./BankTransferManagement";
 import { InvoiceManagement } from "./InvoiceManagement";
 import { PaymentTracking } from "./PaymentTracking";
-import { supabase } from "@/integrations/supabase/client";
+import { adminApi, bankTransferApi } from "@/lib/api";
 import { toast } from "sonner";
 
 interface PaymentConfigSectionProps {
@@ -44,42 +44,28 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
   const [dataLoading, setDataLoading] = useState(true);
 
   const fetchTransactions = useCallback(async () => {
-    const { data } = await supabase
-      .from("payment_transactions")
-      .select("amount, payment_method, status")
-      .eq("status", "completed");
-    setTransactions(data || []);
+    const { data } = await adminApi.getTransactions();
+    setTransactions((data || []).filter((t: any) => t.status === 'completed'));
   }, []);
 
   const fetchAllTransactions = useCallback(async () => {
-    const { data } = await supabase
-      .from("payment_transactions")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await adminApi.getTransactions();
     setAllTransactions(data || []);
   }, []);
 
   const fetchTransfers = useCallback(async () => {
-    const { data } = await supabase
-      .from("bank_transfer_requests")
-      .select("*, profiles(email, display_name), subscription_plans(name), credit_packs(name, credits)")
-      .order("created_at", { ascending: false });
+    const { data } = await bankTransferApi.listAll();
     setTransfers(data || []);
   }, []);
 
   const fetchInvoices = useCallback(async () => {
-    const { data } = await supabase
-      .from("invoices")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await adminApi.getInvoices();
     setInvoices(data || []);
   }, []);
 
   const fetchUsers = useCallback(async () => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, email");
-    setUsers((data || []).map((u) => ({ id: u.id, email: u.email || "" })));
+    const { data } = await adminApi.getUsers();
+    setUsers((data || []).map((u: any) => ({ id: u.id, email: u.email || "" })));
   }, []);
 
   useEffect(() => {
@@ -126,14 +112,14 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const monthlyRevenue = allTransactions
-      .filter(t => t.status === "completed" && new Date(t.created_at) >= monthStart)
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+      .filter((t: any) => t.status === "completed" && new Date(t.created_at) >= monthStart)
+      .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
     const prevMonthRevenue = allTransactions
-      .filter(t => {
+      .filter((t: any) => {
         const d = new Date(t.created_at);
         return t.status === "completed" && d >= prevMonthStart && d < monthStart;
       })
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+      .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
     const momGrowth = prevMonthRevenue > 0
       ? ((monthlyRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
       : monthlyRevenue > 0 ? 100 : 0;
@@ -145,27 +131,21 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
   }, [fetchTransactions, fetchAllTransactions, fetchTransfers, fetchInvoices]);
 
   const handleApprove = async (id: string, notes: string) => {
-    const { error } = await supabase
-      .from("bank_transfer_requests")
-      .update({ status: "approved", admin_notes: notes, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await bankTransferApi.approve(id, notes);
     if (error) throw error;
     toast.success("Bank transfer approved");
     await fetchTransfers();
   };
 
   const handleReject = async (id: string, notes: string) => {
-    const { error } = await supabase
-      .from("bank_transfer_requests")
-      .update({ status: "rejected", admin_notes: notes, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await bankTransferApi.reject(id, notes);
     if (error) throw error;
     toast.success("Bank transfer rejected");
     await fetchTransfers();
   };
 
   const handleCreateInvoice = async (invoice: any) => {
-    const { error } = await supabase.from("invoices").insert(invoice);
+    const { error } = await adminApi.createInvoice(invoice);
     if (error) {
       toast.error("Failed to create invoice");
       return false;
@@ -176,7 +156,7 @@ export const PaymentConfigSection = ({ loading = false }: PaymentConfigSectionPr
   };
 
   const handleUpdateInvoice = async (id: string, updates: any) => {
-    const { error } = await supabase.from("invoices").update(updates).eq("id", id);
+    const { error } = await adminApi.updateInvoice(id, updates);
     if (error) {
       toast.error("Failed to update invoice");
       return false;

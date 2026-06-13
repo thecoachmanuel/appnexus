@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -87,8 +88,8 @@ const formatTime = (date?: Date) => {
 
 const AIAssistant = ({ currentStep, config, onUpdateConfig }: AIAssistantProps) => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const projectId = searchParams.get("project");
+  const searchParams = useSearchParams();
+  const projectId = searchParams?.get("project");
   
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([defaultWelcome]);
@@ -236,7 +237,7 @@ const AIAssistant = ({ currentStep, config, onUpdateConfig }: AIAssistantProps) 
 
     try {
       // Clean text - remove emojis for cleaner speech
-      const cleanText = text.replace(/[\u{1F600}-\u{1F6FF}]/gu, "").trim();
+      const cleanText = text.replace(/[^\x00-\x7F]/g, "").trim();
       if (!cleanText) {
         setIsSpeaking(false);
         return;

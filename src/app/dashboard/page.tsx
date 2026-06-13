@@ -1,9 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { projectsApi, AppProject } from "@/lib/api";
+import { projectsApi } from "@/lib/api";
+
+export interface AppProject {
+  id: string;
+  user_id: string;
+  app_name: string;
+  website_url: string;
+  description: string | null;
+  app_category: string | null;
+  primary_color: string | null;
+  accent_color: string | null;
+  navigation_style: string | null;
+  features: string[];
+  icon_style: string | null;
+  splash_screen_style: string | null;
+  build_status: string | null;
+  codemagic_connected: boolean;
+  github_connected: boolean;
+  created_at: string;
+  updated_at: string;
+}
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -92,7 +112,7 @@ const Dashboard = () => {
 
       if (projectsError) throw projectsError;
       
-      const projects = projectsData || [];
+      const projects: AppProject[] = projectsData || [];
       setProjects(projects);
 
       // Fetch latest build for each project
@@ -172,9 +192,9 @@ const Dashboard = () => {
   // Calculate stats
   const stats = {
     total: projects.length,
-    complete: projects.filter(p => p.build_status === 'complete').length,
-    building: projects.filter(p => p.build_status === 'building').length,
-    draft: projects.filter(p => p.build_status === 'draft').length,
+    complete: projects.filter((p: any) => p.build_status === 'complete').length,
+    building: projects.filter((p: any) => p.build_status === 'building').length,
+    draft: projects.filter((p: any) => p.build_status === 'draft').length,
   };
 
   const totalPages = Math.max(1, Math.ceil(projectsWithBuilds.length / PAGE_SIZE));
@@ -192,7 +212,7 @@ const Dashboard = () => {
             description="Manage and build your mobile applications"
           >
             <Button variant="outline" className="w-full sm:w-auto" asChild>
-              <Link to="/build-history">
+              <Link href="/build-history">
                 <History className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Build History
               </Link>
@@ -211,7 +231,7 @@ const Dashboard = () => {
               )}
             </Button>
             <Button variant="accent" className="w-full sm:w-auto" asChild>
-              <Link to="/builder">
+              <Link href="/builder">
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 New App
               </Link>
@@ -292,7 +312,7 @@ const Dashboard = () => {
                 Create your first mobile app by entering a website URL. Our AI will configure everything automatically.
               </p>
               <Button variant="accent" asChild>
-                <Link to="/builder">
+                <Link href="/builder">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First App
                 </Link>
@@ -347,7 +367,7 @@ const Dashboard = () => {
                         className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
                         asChild
                       >
-                        <Link to={`/builder?project=${project.id}`}>
+                        <Link href={`/builder?project=${project.id}`}>
                           <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
                           <span className="hidden xs:inline">Edit</span>
                         </Link>

@@ -19,12 +19,12 @@ export async function checkEdgeFunctionHealth(
   const start = performance.now();
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${functionName}?health=1`,
+      `${process.env.NEXT_PUBLIC_API_URL}/functions/v1/${functionName}?health=1`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+          "apikey": process.env.NEXT_PUBLIC_API_KEY || "",
         },
         body: JSON.stringify({}),
       }

@@ -20,7 +20,7 @@ export const useCreditPacks = () => {
       }
 
       // Filter only active packs
-      const activePacks = (data || []).filter(pack => pack.is_active);
+      const activePacks = (data || []).filter((pack: any) => pack.is_active);
       setCreditPacks(activePacks);
     } catch (err) {
       console.error("Error fetching credit packs:", err);

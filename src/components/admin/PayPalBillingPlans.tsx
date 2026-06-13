@@ -25,7 +25,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface SubscriptionPlan {
   id: string;
@@ -53,7 +53,7 @@ export const PayPalBillingPlans = () => {
   const loadPlans = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await apiClient
         .from("subscription_plans")
         .select("*")
         .order("price_monthly", { ascending: true });
@@ -71,7 +71,7 @@ export const PayPalBillingPlans = () => {
   const syncPlan = async (planId: string) => {
     setSyncing(planId);
     try {
-      const { data, error } = await supabase.functions.invoke("paypal-billing", {
+      const { data, error } = await apiClient.functions.invoke("paypal-billing", {
         body: { action: "sync_plan", plan_id: planId },
       });
 
@@ -94,7 +94,7 @@ export const PayPalBillingPlans = () => {
   const unlinkPlan = async (planId: string) => {
     setUnlinking(planId);
     try {
-      const { data, error } = await supabase.functions.invoke("paypal-billing", {
+      const { data, error } = await apiClient.functions.invoke("paypal-billing", {
         body: { action: "deactivate_plan", plan_id: planId },
       });
 

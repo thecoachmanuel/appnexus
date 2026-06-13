@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Search, RefreshCw, Plus, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { toast } from "sonner";
 import { TransactionFormDialog } from "./TransactionFormDialog";
 
@@ -75,7 +75,7 @@ export const PaymentTracking = ({ transactions, stats, onRefresh, loading }: Pay
   };
 
   const handleCreate = async (data: Partial<Transaction>) => {
-    const { error } = await supabase.from("payment_transactions").insert({
+    const { error } = await apiClient.from("payment_transactions").insert({
       user_id: data.user_id!, amount: data.amount!, currency: data.currency || "USD",
       payment_method: data.payment_method as any, status: data.status as any,
       transaction_type: data.transaction_type!,
@@ -86,7 +86,7 @@ export const PaymentTracking = ({ transactions, stats, onRefresh, loading }: Pay
 
   const handleUpdate = async (data: Partial<Transaction>) => {
     if (!editingTransaction) return;
-    const { error } = await supabase.from("payment_transactions").update({
+    const { error } = await apiClient.from("payment_transactions").update({
       amount: data.amount, currency: data.currency, payment_method: data.payment_method as any,
       status: data.status as any, transaction_type: data.transaction_type,
     }).eq("id", editingTransaction.id);
@@ -96,7 +96,7 @@ export const PaymentTracking = ({ transactions, stats, onRefresh, loading }: Pay
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from("payment_transactions").delete().eq("id", deleteId);
+    const { error } = await apiClient.from("payment_transactions").delete().eq("id", deleteId);
     if (error) toast.error("Failed to delete transaction: " + error.message);
     else { toast.success("Transaction deleted"); onRefresh(); }
     setDeleteId(null);

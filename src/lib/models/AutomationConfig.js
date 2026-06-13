@@ -8,4 +8,4 @@ const automationConfigSchema = new mongoose.Schema({
   is_enabled: { type: Boolean, default: true }
 }, { timestamps: true });
 
-export const AutomationConfig = mongoose.model('AutomationConfig', automationConfigSchema);
+export const AutomationConfig = mongoose.models.AutomationConfig || mongoose.model('AutomationConfig', automationConfigSchema);

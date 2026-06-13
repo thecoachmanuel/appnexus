@@ -7,4 +7,4 @@ const appTemplateSchema = new mongoose.Schema({
   config: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
-export const AppTemplate = mongoose.model('AppTemplate', appTemplateSchema);
+export const AppTemplate = mongoose.models.AppTemplate || mongoose.model('AppTemplate', appTemplateSchema);

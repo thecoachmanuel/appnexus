@@ -14,4 +14,4 @@ const paymentTransactionSchema = new mongoose.Schema({
   reference_id: { type: String, default: null }
 }, { timestamps: true });
 
-export const PaymentTransaction = mongoose.model('PaymentTransaction', paymentTransactionSchema);
+export const PaymentTransaction = mongoose.models.PaymentTransaction || mongoose.model('PaymentTransaction', paymentTransactionSchema);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from "next/link";
 import { 
   Book, 
   Smartphone, 
@@ -208,7 +208,7 @@ const Help = () => {
             <>
               {/* Quick Links */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                <Link to="/builder">
+                <Link href="/builder">
                   <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
                     <CardContent className="p-4 flex items-center gap-3">
                       <Smartphone className="h-5 w-5 text-primary" />
@@ -224,7 +224,7 @@ const Help = () => {
                     </CardContent>
                   </Card>
                 </a>
-                <Link to="/dashboard">
+                <Link href="/dashboard">
                   <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
                     <CardContent className="p-4 flex items-center gap-3">
                       <Globe className="h-5 w-5 text-primary" />

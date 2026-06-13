@@ -60,4 +60,4 @@ const appProjectSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-export const AppProject = mongoose.model('AppProject', appProjectSchema);
+export const AppProject = mongoose.models.AppProject || mongoose.model('AppProject', appProjectSchema);

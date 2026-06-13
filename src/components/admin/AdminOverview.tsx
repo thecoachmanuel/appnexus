@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, DollarSign, Hammer, TrendingUp, RotateCcw, Loader2, CreditCard, UserPlus, Activity, BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -41,7 +41,7 @@ export const AdminOverview = ({ stats, loading = false, isDemo = false }: AdminO
   const handleResetDemoData = async () => {
     setResetting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("reset-demo-data");
+      const { data, error } = await apiClient.functions.invoke("reset-demo-data");
       if (error) throw error;
       toast({
         title: "Demo data reset",

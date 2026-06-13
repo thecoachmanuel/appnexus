@@ -31,7 +31,7 @@ export const useNavBadges = () => {
       
       // Count enabled automations that haven't run (potential attention needed)
       const pendingAutomations = automations.filter(
-        (a) => a.is_enabled && !a.last_run_at
+        (a: any) => a.is_enabled && !a.last_run_at
       ).length;
 
       // Fetch projects
@@ -40,7 +40,7 @@ export const useNavBadges = () => {
       
       // Count building projects
       const buildingProjects = projects.filter(
-        (p) => p.build_status === "building"
+        (p: any) => p.build_status === "building"
       ).length;
 
       setBadges({

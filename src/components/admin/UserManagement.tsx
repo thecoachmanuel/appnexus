@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { toast } from "sonner";
 
 interface User {
@@ -55,10 +55,10 @@ export const UserManagement = ({ users, onRefresh, loading = false, isDemo = fal
 
   useEffect(() => {
     const fetchRoles = async () => {
-      const { data, error } = await supabase.from("user_roles").select("user_id, role");
+      const { data, error } = await apiClient.from("user_roles").select("user_id, role");
       if (!error && data) {
         const map: Record<string, AppRole> = {};
-        data.forEach((r) => { map[r.user_id] = r.role as AppRole; });
+        data.forEach((r: any) => { map[r.user_id] = r.role as AppRole; });
         setUserRoles(map);
       }
     };
@@ -70,13 +70,13 @@ export const UserManagement = ({ users, onRefresh, loading = false, isDemo = fal
     try {
       const currentRole = userRoles[userId];
       if (currentRole) {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("user_roles")
           .update({ role: newRole })
           .eq("user_id", userId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await apiClient
           .from("user_roles")
           .insert({ user_id: userId, role: newRole });
         if (error) throw error;
