@@ -25,6 +25,7 @@ export const PricingManager = ({
   onUpdatePlan,
   onCreatePlan,
   onRefreshPlans,
+  onRefreshCreditPacks,
   loading,
 }: PricingManagerProps) => {
   const stats = useMemo(() => {
