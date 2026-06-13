@@ -67,11 +67,10 @@ const AppBuilder = () => {
   });
 
   return (
-    <Suspense fallback={null}>
-      <TooltipProvider>
-        <div className="min-h-screen bg-background">
-          <Navbar />
-        
+    <TooltipProvider>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+      
         <main className="pt-20 sm:pt-24 md:pt-28 pb-24 md:pb-16">
           <div className="container mx-auto px-3 sm:px-4 md:px-6">
             {/* Demo Mode Banner */}
@@ -150,10 +149,11 @@ const AppBuilder = () => {
         <Footer />
         <MobileBottomNav />
         
-        <AIAssistant currentStep={currentStep} config={config} onUpdateConfig={updateConfig} />
+        <Suspense fallback={null}>
+          <AIAssistant currentStep={currentStep} config={config} onUpdateConfig={updateConfig} />
+        </Suspense>
       </div>
-      </TooltipProvider>
-    </Suspense>
+    </TooltipProvider>
   );
 };
 
