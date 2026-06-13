@@ -20,6 +20,14 @@ import { DemoModeBanner } from "@/components/DemoModeBanner";
 
 const Admin = () => {
   const { isAdmin, loading: authLoading } = useAdminAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      router.push("/dashboard");
+    }
+  }, [authLoading, isAdmin, router]);
+
   const [activeSection, setActiveSection] = useState<AdminSection>("overview");
   const adminData = useAdminData();
   const { isDemo, guardAction } = useDemoGuard();
@@ -31,7 +39,7 @@ const Admin = () => {
   const isDataLoading = adminData.loading;
 
   if (!isAdmin) {
-    return (() => { const router = useRouter(); useEffect(() => { router.push("/dashboard"); }, [router]); return null; })();
+    return null;
   }
 
   const renderSection = () => {
