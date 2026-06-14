@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import { User } from '@/lib/models/User';
+import { CreditPack } from '@/lib/models/CreditPack';
+import { PaymentTransaction } from '@/lib/models/PaymentTransaction';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST(req: Request) {
@@ -23,15 +25,23 @@ export async function POST(req: Request) {
 
     const { priceId, returnUrl } = await req.json();
 
-    // Map the priceId/packId to credits
-    // According to mock data in useCreditPacks: 
-    // pack_1 -> 100, pack_2 -> 250, pack_3 -> 500, pack_4 -> 1000
-    let creditsToAdd = 0;
-    if (priceId === 'pack_1') creditsToAdd = 100;
-    else if (priceId === 'pack_2') creditsToAdd = 250;
-    else if (priceId === 'pack_3') creditsToAdd = 500;
-    else if (priceId === 'pack_4') creditsToAdd = 1000;
-    else creditsToAdd = 100; // fallback
+    const creditPack = await CreditPack.findById(priceId);
+    if (!creditPack) {
+      return NextResponse.json({ error: 'Credit pack not found' }, { status: 404 });
+    }
+
+    const creditsToAdd = creditPack.credits;
+
+    // Record the transaction
+    await PaymentTransaction.create({
+      user_id: decodedToken.id,
+      amount: creditPack.price,
+      currency: 'USD',
+      payment_method: 'stripe_mock',
+      transaction_type: 'credit_purchase',
+      status: 'completed',
+      reference_id: `mock_txn_${Date.now()}`
+    });
 
     // Immediately grant the credits (Mocking the webhook for instant local test)
     await User.findByIdAndUpdate(decodedToken.id, {

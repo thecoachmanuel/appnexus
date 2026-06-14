@@ -341,21 +341,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         return;
       }
 
-      // Deduct credits
-      const { data: deductResult, error: deductError } = await userApi.useCredits(
-        creditsPerBuild,
-        'app_build',
-        `Build: ${buildConfig?.appName || config.appName || 'App'}`
-      );
-
-      if (deductError || !deductResult?.success) {
-        toast({
-          title: "Credit Deduction Failed",
-          description: "Could not deduct credits. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Remove client-side credit deduction. This is now enforced securely by the backend API.
     }
 
     setBuildStatus("building");
@@ -410,6 +396,12 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       pollIntervalRef.current = setInterval(() => {
         pollBuildStatus(data.buildId);
       }, 8000);
+
+      // Refresh credits balance in UI after starting build
+      if (!isDemoAccount && user) {
+        const { data: refreshedCredits } = await userApi.getCredits();
+        if (refreshedCredits) setUserCredits(refreshedCredits.credits ?? 0);
+      }
 
     } catch (error) {
       console.error("Build error:", error);

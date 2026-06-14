@@ -3,6 +3,8 @@ import connectToDatabase from '@/lib/db';
 import mongoose from 'mongoose';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { ApiConfiguration } from '@/lib/models/ApiConfiguration';
+import { User } from '@/lib/models/User';
+import { SystemSetting } from '@/lib/models/SystemSetting';
 import { verifyToken } from '@/lib/auth';
 
 export async function GET(req: Request) {
@@ -31,6 +33,20 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     await connectToDatabase();
+
+    const user = await User.findById(decoded.id);
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const setting = await SystemSetting.findOne({ key: 'credits_per_build' });
+    const creditsPerBuild = setting ? Number(setting.value) : 1;
+
+    if (user.credits < creditsPerBuild) {
+      return NextResponse.json({ error: `Insufficient credits. You need ${creditsPerBuild} credits to build an app.` }, { status: 402 });
+    }
+
+    // Deduct credits
+    user.credits -= creditsPerBuild;
+    await user.save();
 
     const buildId = new mongoose.Types.ObjectId();
     const requestUrl = new URL(req.url);
@@ -84,6 +100,11 @@ export async function POST(req: Request) {
       console.error('GitHub Actions Dispatch Error:', errRes);
       build.status = 'failed';
       await build.save();
+      
+      // Refund credits
+      user.credits += creditsPerBuild;
+      await user.save();
+
       return NextResponse.json({ error: `Failed to trigger GitHub Action: ${ghResponse.statusText}` }, { status: 500 });
     }
 
