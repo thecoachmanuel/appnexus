@@ -15,8 +15,11 @@ import {
   Coins,
   Plug,
   Banknote,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export type AdminSection =
   | "overview"
@@ -46,8 +49,14 @@ interface AdminSidebarProps {
 const SidebarContent = ({ 
   activeSection, 
   onSectionChange, 
-  onClose 
 }: AdminSidebarProps & { onClose?: () => void }) => {
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/auth');
+  };
 
   const renderItem = (item: { id: AdminSection; label: string; icon: React.ElementType }) => (
     <button
@@ -90,12 +99,16 @@ const SidebarContent = ({
         </nav>
       </ScrollArea>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         <Button variant="outline" size="sm" className="w-full" asChild>
           <Link href="/dashboard">
             <Home className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Link>
+        </Button>
+        <Button variant="destructive" size="sm" className="w-full" onClick={handleLogout}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
         </Button>
       </div>
     </div>
