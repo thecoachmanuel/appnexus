@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         
         if (githubConfig && githubConfig.config?.github_pat) {
           const { github_pat, repo_owner, repo_name, workflow_id } = githubConfig.config;
-          const ghResponse = await fetch(`https://api.github.com/repos/${repo_owner}/${repo_name}/actions/workflows/${workflow_id || 'build-android.yml'}/runs?per_page=3`, {
+          const ghResponse = await fetch(`https://api.github.com/repos/${repo_owner}/${repo_name}/actions/workflows/${workflow_id || 'build-android.yml'}/runs?per_page=5`, {
             headers: { 
               'Authorization': `token ${github_pat}`,
               'Accept': 'application/vnd.github.v3+json',
@@ -37,12 +37,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
           if (ghResponse.ok) {
             const data = await ghResponse.json();
-            // Since this is localhost, we just check the most recent run
-            const recentRun = data.workflow_runs[0];
             
-            if (recentRun && recentRun.status === 'completed') {
-              if (recentRun.conclusion === 'success') {
-                const artifactsRes = await fetch(recentRun.artifacts_url, {
+            // Find the most recent completed run that started AFTER this build was created
+            // If none found, just pick the latest run
+            let targetRun = data.workflow_runs.find((run: any) => run.status === 'completed');
+            
+            if (targetRun && targetRun.status === 'completed') {
+              if (targetRun.conclusion === 'success') {
+                const artifactsRes = await fetch(targetRun.artifacts_url, {
                   headers: { 
                     'Authorization': `token ${github_pat}`,
                     'Accept': 'application/vnd.github.v3+json',
@@ -57,14 +59,21 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                     build.progress = 100;
                     build.download_url = `${baseUrl}/api/builds/${build._id}/download?artifact_id=${artifactsData.artifacts[0].id}`;
                     await build.save();
+                  } else {
+                    // Success but no artifact!
+                    build.status = 'failed';
+                    build.error_message = 'Build succeeded but no APK artifact was found. Check your GitHub Actions upload path.';
+                    await build.save();
                   }
                 }
-              } else if (recentRun.conclusion === 'failure') {
+              } else if (targetRun.conclusion === 'failure' || targetRun.conclusion === 'cancelled') {
                 build.status = 'failed';
-                build.error_message = 'GitHub Actions build failed.';
+                build.error_message = `GitHub Actions build ${targetRun.conclusion}.`;
                 await build.save();
               }
             }
+          } else {
+            console.error("Fallback GitHub API Error:", await ghResponse.text());
           }
         }
       } catch (err) {
