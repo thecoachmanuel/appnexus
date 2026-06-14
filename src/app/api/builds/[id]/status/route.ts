@@ -65,17 +65,32 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                     build.progress = 100;
                     build.download_url = `${baseUrl}/api/builds/${build._id}/download?artifact_id=${artifactsData.artifacts[0].id}`;
                     await build.save();
+
+                    if (build.project_id) {
+                      const { AppProject } = await import('@/lib/models/AppProject');
+                      await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'complete' });
+                    }
                   } else {
                     // Success but no artifact!
                     build.status = 'failed';
                     build.error_message = 'Build succeeded but no APK artifact was found. Check your GitHub Actions upload path.';
                     await build.save();
+
+                    if (build.project_id) {
+                      const { AppProject } = await import('@/lib/models/AppProject');
+                      await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'failed' });
+                    }
                   }
                 }
               } else if (targetRun.conclusion === 'failure' || targetRun.conclusion === 'cancelled') {
                 build.status = 'failed';
                 build.error_message = `GitHub Actions build ${targetRun.conclusion || 'failed'}.`;
                 await build.save();
+
+                if (build.project_id) {
+                  const { AppProject } = await import('@/lib/models/AppProject');
+                  await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'failed' });
+                }
               }
             }
           } else {

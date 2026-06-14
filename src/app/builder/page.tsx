@@ -63,9 +63,11 @@ const BuilderContent = () => {
     document.title = `${settings.app_name} - App Builder`;
   }, [settings.app_name]);
 
-  // Load project from URL if provided
+  // Load project from URL or reset if new
   useEffect(() => {
     const projectId = searchParams.get('project');
+    const isNew = searchParams.get('new') === 'true';
+
     if (projectId && user) {
       const loadProject = async () => {
         try {
@@ -100,6 +102,9 @@ const BuilderContent = () => {
         }
       };
       loadProject();
+    } else if (isNew) {
+      resetBuilder();
+      router.replace('/builder');
     }
   }, [searchParams, user, updateConfig, goToStep, toast, router, resetBuilder]);
 

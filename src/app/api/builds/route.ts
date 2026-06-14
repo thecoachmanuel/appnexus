@@ -15,8 +15,17 @@ export async function GET(req: Request) {
     const decoded = verifyToken(token) as any;
     if (!decoded || !decoded.id) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId');
+
     await connectToDatabase();
-    const builds = await AppBuild.find({ user_id: decoded.id }).sort({ createdAt: -1 });
+    
+    const filter: any = { user_id: decoded.id };
+    if (projectId) {
+      filter.project_id = projectId;
+    }
+
+    const builds = await AppBuild.find(filter).sort({ createdAt: -1 });
     return NextResponse.json(builds);
   } catch (error: any) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -55,6 +64,7 @@ export async function POST(req: Request) {
     const build = await AppBuild.create({
       _id: buildId,
       user_id: decoded.id,
+      project_id: body.projectId || null,
       app_name: body.appName || 'AppNexus',
       package_name: `com.app.${(body.appName || 'appnexus').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
       website_url: body.websiteUrl || baseUrl,

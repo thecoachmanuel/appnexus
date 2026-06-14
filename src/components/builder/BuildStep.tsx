@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, QrCode, CheckCircle, Loader2, Smartphone, FileDown, FolderOpen, Apple, AlertCircle, Monitor, Globe, Shield, Store, Key, Upload, BadgeCheck, FileText, X, Save, FolderInput, Package, Zap, Bell, BellOff, Clock, Server, Cpu, ListPlus, Play } from "lucide-react";
@@ -90,6 +91,8 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { settings } = useSystemSettings();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get('project');
   const { playSuccess, playError } = useNotificationSounds();
   const { notifyBuildComplete, notifyBuildFailed, requestPermission, permission, isSupported } = useBrowserNotifications();
   const { queue, addToQueue, updateBuild, removeBuild, clearCompleted, canStartNewBuild } = useBuildQueue();
@@ -218,7 +221,8 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     if (!user) return;
 
     try {
-      const { error } = await projectsApi.create({
+      const projectPayload = {
+        build_id: buildId || undefined,
         website_url: config.websiteUrl,
         app_name: config.appName || "AppNexus",
         primary_color: config.primaryColor,
@@ -230,7 +234,11 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         icon_style: config.iconStyle,
         splash_screen_style: config.splashScreenStyle,
         build_status: "complete",
-      });
+      };
+
+      const { error } = projectId 
+        ? await projectsApi.update(projectId, projectPayload)
+        : await projectsApi.create(projectPayload);
 
       if (error) throw error;
       setProjectSaved(true);
@@ -351,6 +359,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
 
     // Use provided config (from rebuild) or current config
     const buildParams = buildConfig || {
+      projectId: projectId || undefined,
       websiteUrl: config.websiteUrl,
       appName: config.appName || "AppNexus",
       primaryColor: config.primaryColor,

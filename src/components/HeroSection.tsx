@@ -180,7 +180,7 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
             <Button variant="accent" size="xl" className="group" asChild>
-              <Link href="/builder">
+              <Link href="/builder?new=true">
                 Start Building Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>

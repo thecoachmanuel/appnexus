@@ -247,7 +247,7 @@ const Dashboard = () => {
               )}
             </Button>
             <Button variant="accent" className="w-full sm:w-auto" asChild>
-              <Link href="/builder">
+              <Link href="/builder?new=true">
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 New App
               </Link>
@@ -328,7 +328,7 @@ const Dashboard = () => {
                 Create your first mobile app by entering a website URL. Our AI will configure everything automatically.
               </p>
               <Button variant="accent" asChild>
-                <Link href="/builder">
+                <Link href="/builder?new=true">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First App
                 </Link>

@@ -233,7 +233,7 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link href="/builder" className="cursor-pointer flex items-center gap-2 font-medium">
+                  <Link href="/builder?new=true" className="cursor-pointer flex items-center gap-2 font-medium">
                     <Plus className="w-4 h-4" />
                     New App
                   </Link>
@@ -400,7 +400,7 @@ const Navbar = () => {
             <div className="py-2">
               <ThemeToggle />
             </div>
-            <Link href="/builder" 
+            <Link href="/builder?new=true" 
               onClick={() => setIsOpen(false)}
               className={cn(
                 "flex items-center gap-2 py-2 cursor-pointer",

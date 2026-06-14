@@ -27,15 +27,24 @@ export async function POST(req: Request) {
     const decoded = verifyToken(token) as any;
     if (!decoded || !decoded.id) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    const body = await req.json();
+    const { build_id, ...projectData } = await req.json();
     await connectToDatabase();
     
     const project = await AppProject.create({
       user_id: decoded.id,
-      ...body
+      ...projectData
     });
+
+    if (build_id) {
+      const { AppBuild } = await import('@/lib/models/AppBuild');
+      await AppBuild.findByIdAndUpdate(build_id, {
+        project_id: project._id
+      });
+    }
+
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
+    console.error("Project create error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

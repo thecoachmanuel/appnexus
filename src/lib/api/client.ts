@@ -56,7 +56,7 @@ export const projectsApi = {
   create: (project: any) => handleApi(fetchApi('/api/projects', { method: 'POST', body: JSON.stringify(project) })),
   update: (id: string, updates: any) => handleApi(fetchApi(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(updates) })),
   delete: (id: string) => handleApi(fetchApi(`/api/projects/${id}`, { method: 'DELETE' })),
-  getBuilds: (projectId?: string) => handleApi(fetchApi('/api/builds'))
+  getBuilds: (projectId?: string) => handleApi(fetchApi(projectId ? `/api/builds?projectId=${projectId}` : '/api/builds'))
 };
 
 export const buildApi = {
