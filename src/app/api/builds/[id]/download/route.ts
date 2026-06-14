@@ -3,6 +3,10 @@ import connectToDatabase from '@/lib/db';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { ApiConfiguration } from '@/lib/models/ApiConfiguration';
 import { getUserFromRequest } from '@/lib/auth';
+// @ts-ignore
+import AdmZip from 'adm-zip';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -34,18 +38,50 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           'User-Agent': 'AppForge-Builder',
           'Accept': 'application/vnd.github.v3+json'
         },
-        redirect: 'follow'
+        redirect: 'follow',
+        cache: 'no-store'
       });
 
       if (!ghResponse.ok) {
         return NextResponse.json({ error: 'Failed to fetch artifact from GitHub' }, { status: ghResponse.status });
       }
 
-      const headers = new Headers(ghResponse.headers);
-      headers.set('Content-Disposition', `attachment; filename="${build.app_name}-build.zip"`);
-      headers.set('Content-Type', 'application/zip');
+      // Read zip archive buffer
+      const buffer = await ghResponse.arrayBuffer();
+      
+      // Extract build file inside zip
+      const zip = new AdmZip(Buffer.from(buffer));
+      const zipEntries = zip.getEntries();
+      
+      const appEntry = zipEntries.find((entry: any) => 
+        !entry.isDirectory && 
+        (entry.name.endsWith('.apk') || 
+         entry.name.endsWith('.aab') || 
+         entry.name.endsWith('.ipa') || 
+         entry.name.endsWith('.zip'))
+      ) || zipEntries[0];
 
-      return new NextResponse(ghResponse.body as any, {
+      if (!appEntry) {
+        return NextResponse.json({ error: 'No files found in artifact zip' }, { status: 400 });
+      }
+
+      const fileBuffer = appEntry.getData();
+      const fileExt = appEntry.name.split('.').pop() || 'apk';
+      const sanitizedName = (build.app_name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      const headers = new Headers();
+      headers.set('Content-Disposition', `attachment; filename="${sanitizedName}.${fileExt}"`);
+      
+      let contentType = 'application/octet-stream';
+      if (fileExt === 'apk') contentType = 'application/vnd.android.package-archive';
+      else if (fileExt === 'aab') contentType = 'application/octet-stream';
+      else if (fileExt === 'ipa') contentType = 'application/octet-stream';
+      else if (fileExt === 'zip') contentType = 'application/zip';
+      
+      headers.set('Content-Type', contentType);
+      headers.set('Content-Length', fileBuffer.length.toString());
+
+      return new NextResponse(fileBuffer, {
         status: 200,
         headers
       });

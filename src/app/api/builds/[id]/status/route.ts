@@ -3,6 +3,8 @@ import connectToDatabase from '@/lib/db';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const user = await getUserFromRequest(req);
@@ -36,7 +38,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
               'Authorization': `token ${github_pat}`,
               'Accept': 'application/vnd.github.v3+json',
               'User-Agent': 'AppForge-Builder'
-            }
+            },
+            cache: 'no-store'
           });
 
           if (ghResponse.ok) {
@@ -55,7 +58,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                     'Authorization': `token ${github_pat}`,
                     'Accept': 'application/vnd.github.v3+json',
                     'User-Agent': 'AppForge-Builder'
-                  }
+                  },
+                  cache: 'no-store'
                 });
                 
                 if (artifactsRes.ok) {
