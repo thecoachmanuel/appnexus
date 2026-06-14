@@ -21,6 +21,19 @@ on:
       webhook_url:
         description: 'Webhook URL for status updates'
         required: true
+      primary_color:
+        description: 'Primary Color'
+        required: false
+        default: '#22d3ee'
+      accent_color:
+        description: 'Accent Color'
+        required: false
+        default: '#a855f7'
+      navigation_style:
+        description: 'Navigation Style'
+        required: false
+        default: 'bottom-nav'
+
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -95,7 +108,14 @@ jobs:
         run: |
           rm -rf android
           npx cap add android
+          node customize_android.js
           npx cap sync android
+        env:
+          PRIMARY_COLOR: ${{ github.event.inputs.primary_color }}
+          ACCENT_COLOR: ${{ github.event.inputs.accent_color }}
+          NAVIGATION_STYLE: ${{ github.event.inputs.navigation_style }}
+          WEBSITE_URL: ${{ github.event.inputs.website_url }}
+
 
       - name: Build APK
         working-directory: android

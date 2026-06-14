@@ -103,7 +103,10 @@ export async function POST(req: Request) {
           package_name: build.package_name,
           website_url: body.websiteUrl || baseUrl,
           build_id: buildId.toString(),
-          webhook_url: webhook_url
+          webhook_url: webhook_url,
+          primary_color: body.primaryColor || '#22d3ee',
+          accent_color: body.accentColor || '#a855f7',
+          navigation_style: body.navigationStyle || 'bottom-nav'
         }
       })
     });
