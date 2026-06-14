@@ -9,6 +9,7 @@ interface BuildProgressAnimationProps {
   status: "idle" | "building" | "complete" | "failed";
   platform: string;
   currentStepLabel?: string;
+  buildSteps?: { progress: number; label: string }[];
 }
 
 const buildPhases = [
@@ -23,6 +24,7 @@ const BuildProgressAnimation = ({
   status,
   platform,
   currentStepLabel,
+  buildSteps,
 }: BuildProgressAnimationProps) => {
   const [displayProgress, setDisplayProgress] = useState(0);
   const [animatedDots, setAnimatedDots] = useState("");
@@ -65,6 +67,10 @@ const BuildProgressAnimation = ({
   ) || buildPhases[buildPhases.length - 1];
 
   const PhaseIcon = currentPhase.icon;
+
+  const computedStepLabel = buildSteps 
+    ? buildSteps.find((s) => displayProgress <= s.progress)?.label || "Finishing up..."
+    : currentStepLabel;
 
   if (status === "idle") return null;
 
@@ -131,7 +137,7 @@ const BuildProgressAnimation = ({
           <div className="flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">
-              {currentStepLabel || `Building for ${platform}`}{animatedDots}
+              {computedStepLabel || `Building for ${platform}`}{animatedDots}
             </span>
           </div>
         )}

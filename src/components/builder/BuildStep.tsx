@@ -501,7 +501,6 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
   ];
 
   const buildSteps = selectedPlatform === "ios" ? iosBuildSteps : androidBuildSteps;
-  const currentStepLabel = buildSteps.find((s) => buildProgress <= s.progress)?.label || "Build complete!";
 
   return (
     <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12">
@@ -1503,11 +1502,11 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
           transition={{ duration: 0.3 }}
         >
           {/* Enhanced Progress Animation */}
-          <BuildProgressAnimation
-            progress={buildProgress}
-            status={buildStatus}
-            platform={selectedPlatform === "ios" ? "iOS" : "Android"}
-            currentStepLabel={currentStepLabel}
+          <BuildProgressAnimation 
+            progress={buildProgress} 
+            status={buildStatus} 
+            platform={selectedPlatform}
+            buildSteps={buildSteps}
           />
 
           {/* Build Log with animations */}
