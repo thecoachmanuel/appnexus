@@ -33,6 +33,11 @@ on:
         description: 'Navigation Style'
         required: false
         default: 'bottom-nav'
+      hide_selectors:
+        description: 'CSS selectors to hide'
+        required: false
+        default: 'header, footer, nav'
+
 
 
 env:
@@ -115,6 +120,7 @@ jobs:
           ACCENT_COLOR: ${{ github.event.inputs.accent_color }}
           NAVIGATION_STYLE: ${{ github.event.inputs.navigation_style }}
           WEBSITE_URL: ${{ github.event.inputs.website_url }}
+          HIDE_SELECTORS: ${{ github.event.inputs.hide_selectors }}
 
 
       - name: Build APK

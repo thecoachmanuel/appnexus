@@ -1,11 +1,42 @@
 import { NextResponse } from 'next/server';
 
+function cleanHtml(html: string): string {
+  // Strip scripts, styles, and SVG blocks to keep context small and structural
+  let cleaned = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, ''); // Remove HTML comments
+  
+  // Return the first 35,000 characters to cover header metadata, main layout tags, nav, and body wrapper
+  return cleaned.slice(0, 35000);
+}
+
 export async function POST(req: Request) {
   try {
     const { url } = await req.json();
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
+
+    // Attempt to fetch the website HTML content on the server
+    let htmlContent = '';
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+          'Accept-Language': 'en-US,en;q=0.9'
+        },
+        next: { revalidate: 3600 } // cache for 1 hour
+      });
+      if (response.ok) {
+        htmlContent = await response.text();
+      }
+    } catch (fetchErr) {
+      console.warn(`Failed to fetch remote HTML for ${url}:`, fetchErr);
+      // Fall back to analysis without HTML if site is unreachable or blocked
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.LOVABLE_API_KEY;
@@ -18,12 +49,13 @@ export async function POST(req: Request) {
       return NextResponse.json({
         config: {
           app_name: appName,
-          primary_color: '#6366f1',
-          accent_color: '#8b5cf6',
+          primary_color: '#007bff',
+          accent_color: '#6c757d',
           navigation_style: 'bottom-nav',
-          features: ['Push Notifications', 'Offline Mode', 'User Profiles'],
+          features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
-          description: `${appName} mobile app – fast, native experience for your users.`
+          description: `${appName} mobile app – fast, native experience for your users.`,
+          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
         }
       });
     }
@@ -31,18 +63,28 @@ export async function POST(req: Request) {
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `Analyze the website URL: ${url}. 
-Based on the domain name and likely industry, generate a plausible configuration for a mobile app version of this website. 
-Return ONLY a raw JSON object with the following structure (no markdown, no backticks):
+    const cleanedHtml = htmlContent ? cleanHtml(htmlContent) : '';
+
+    const prompt = `Analyze the website URL: ${url}.
+${cleanedHtml ? `Here is a structural snippet of the website's HTML:\n${cleanedHtml}\n` : ''}
+Based on the website ${cleanedHtml ? 'HTML, meta tags, and tag classes' : 'domain name and purpose'}, generate a highly optimized mobile app wrapper configuration.
+
+Specifically, analyze:
+1. Brand colors: look for theme-color meta tags, CSS variables, inline styles, or common branding guidelines.
+2. Layout header and footer: identify the CSS classes or IDs used for the main website navigation headers, mobile menus, site footers, cookie prompts, or promotional banners.
+3. App category, name, and descriptions.
+
+Return ONLY a raw JSON object with the following structure (no markdown, no backticks, no text wrap):
 {
   "config": {
-    "app_name": "string (A clean, short name based on the URL)",
+    "app_name": "string (A clean, short native app name)",
     "primary_color": "string (Hex code for primary brand color, e.g. #3b82f6)",
-    "accent_color": "string (Hex code for secondary/accent color)",
+    "accent_color": "string (Hex code for secondary brand color)",
     "navigation_style": "string (Must be exactly one of: 'bottom-nav', 'drawer', or 'tabs')",
     "features": ["string", "string", "string"],
-    "app_category": "string (e.g. E-commerce, Social, Productivity, Education)",
-    "description": "string (A 1-2 sentence description of what the app does)"
+    "app_category": "string (e.g. E-commerce, Social, Productivity, Education, Healthcare)",
+    "description": "string (A 1-2 sentence description of what the app does)",
+    "hide_selectors": "string (A comma-separated list of CSS selectors that target headers, footers, cookie banners, navigation menus, and banners to hide them from WebView, e.g. 'header.site-header, div#mobile-nav, footer.site-footer, div.cookie-banner')"
   }
 }`;
 
@@ -59,19 +101,19 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
       result = JSON.parse(cleanJsonText);
     } catch (e) {
       console.error('Failed to parse AI response as JSON:', cleanJsonText);
-      // Return a smart mock on parse failure
       const domain = url.replace(/https?:\/\//, '').split('/')[0];
       const name = domain.split('.')[0];
       const appName = name.charAt(0).toUpperCase() + name.slice(1);
       result = {
         config: {
           app_name: appName,
-          primary_color: '#6366f1',
-          accent_color: '#8b5cf6',
+          primary_color: '#007bff',
+          accent_color: '#6c757d',
           navigation_style: 'bottom-nav',
-          features: ['Push Notifications', 'Offline Mode', 'User Profiles'],
+          features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
-          description: `${appName} mobile app.`
+          description: `${appName} mobile app.`,
+          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
         }
       };
     }
@@ -79,7 +121,6 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Analyze Website Error:', error);
-    // Always return a useful response instead of failing
     try {
       const { url } = await req.clone().json().catch(() => ({ url: 'app' }));
       const domain = (url || 'app').replace(/https?:\/\//, '').split('/')[0];
@@ -88,12 +129,13 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
       return NextResponse.json({
         config: {
           app_name: appName,
-          primary_color: '#6366f1',
-          accent_color: '#8b5cf6',
+          primary_color: '#007bff',
+          accent_color: '#6c757d',
           navigation_style: 'bottom-nav',
-          features: ['Push Notifications', 'Offline Mode', 'User Profiles'],
+          features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
-          description: `${appName} mobile app.`
+          description: `${appName} mobile app.`,
+          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
         }
       });
     } catch {

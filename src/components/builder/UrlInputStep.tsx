@@ -55,6 +55,7 @@ interface AnalysisResult {
   iconStyle: string;
   splashScreenStyle: string;
   recommendations: string[];
+  hideSelectors?: string;
 }
 
 interface UrlInputStepProps {
@@ -143,6 +144,7 @@ const UrlInputStep = ({
           iconStyle: data.config.icon_style || "modern",
           splashScreenStyle: data.config.splash_screen_style || "centered-logo",
           recommendations: [],
+          hideSelectors: data.config.hide_selectors || "",
         };
         
         setAnalysisResult(result);

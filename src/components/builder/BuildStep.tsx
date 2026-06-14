@@ -372,6 +372,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       splashScreenStyle: config.splashScreenStyle,
       versionCode: config.versionCode || 1,
       versionName: config.versionName || "1.0",
+      hideSelectors: config.hideSelectors || "",
     };
 
     // Determine which build method to use based on platform

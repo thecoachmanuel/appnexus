@@ -154,6 +154,9 @@ if (mainActivityPath) {
     const accentColor = process.env.ACCENT_COLOR || '#a855f7';
     const navigationStyle = process.env.NAVIGATION_STYLE || 'bottom-nav';
     const websiteUrl = process.env.WEBSITE_URL || '';
+    const rawHideSelectors = process.env.HIDE_SELECTORS || '';
+    const hideSelectors = (rawHideSelectors.trim() || 'header, footer, nav, [role="navigation"], .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, .download-app-banner, .app-banner')
+      .replace(/"/g, '\\"');
     
     const paddingBottom = navigationStyle === 'bottom-nav' ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
 
@@ -186,10 +189,7 @@ public class MainActivity extends BridgeActivity {
                             String css = "var style = document.createElement('style');" +
                                          "style.id = 'appnexus-style';" +
                                          "style.innerHTML = '" +
-                                         "  header, footer, nav, [role=\"navigation\"], " +
-                                         "  .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, " +
-                                         "  #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, " +
-                                         "  .download-app-banner, .app-banner { display: none !important; } " +
+                                         "  " + hideSelectors + " { display: none !important; } " +
                                          "  :root { " +
                                          "    --primary-color: ${primaryColor} !important; " +
                                          "    --primary: ${primaryColor} !important; " +

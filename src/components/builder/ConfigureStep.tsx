@@ -282,6 +282,7 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
       iconStyle: template.config.iconStyle,
       splashScreenStyle: template.config.splashScreenStyle,
       recommendations: template.config.recommendations || [],
+      hideSelectors: template.config.hideSelectors || "",
     });
 
     toast({
@@ -341,6 +342,7 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
           iconStyle: data.config.icon_style || config.iconStyle,
           splashScreenStyle: data.config.splash_screen_style || config.splashScreenStyle,
           recommendations: config.recommendations,
+          hideSelectors: data.config.hide_selectors || config.hideSelectors,
         });
 
         toast({
@@ -844,6 +846,35 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
 
           {/* AdMob Ads Configuration */}
           <AdMobSection config={config} onUpdate={onUpdate} />
+
+          {/* Advanced Wrapping Settings */}
+          <CollapsibleSection
+            title="Advanced App Wrapping (CSS)"
+            icon={<Globe className="w-4 h-4" />}
+            badge={
+              config.hideSelectors ? (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-mono truncate max-w-[120px]">
+                  {config.hideSelectors.split(',').length} selectors
+                </span>
+              ) : undefined
+            }
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hideSelectors" className="text-sm text-foreground">Hide Web Elements (CSS Selectors)</Label>
+                <textarea
+                  id="hideSelectors"
+                  value={config.hideSelectors || ""}
+                  onChange={(e) => onUpdate({ hideSelectors: e.target.value })}
+                  className="w-full min-h-[100px] p-3 text-sm rounded-lg bg-secondary/50 border border-border/50 text-foreground font-mono focus:border-primary outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="e.g., header.site-header, div#mobile-nav, footer.site-footer, div.cookie-banner"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Provide a comma-separated list of CSS selectors targeting elements (headers, footers, sidebars, cookie banners) to hide from WebView, making your app feel natively integrated.
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
 
           {/* AI Recommendations */}
           {config.recommendations.length > 0 && (

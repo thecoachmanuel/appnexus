@@ -106,7 +106,8 @@ export async function POST(req: Request) {
           webhook_url: webhook_url,
           primary_color: body.primaryColor || '#22d3ee',
           accent_color: body.accentColor || '#a855f7',
-          navigation_style: body.navigationStyle || 'bottom-nav'
+          navigation_style: body.navigationStyle || 'bottom-nav',
+          hide_selectors: body.hideSelectors || 'header, footer, nav'
         }
       })
     });

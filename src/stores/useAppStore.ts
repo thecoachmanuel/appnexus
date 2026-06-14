@@ -50,6 +50,7 @@ export interface AppConfig {
   adBannerId?: string;
   adInterstitialId?: string;
   adRewardedId?: string;
+  hideSelectors?: string;
 }
 
 const defaultConfig: AppConfig = {
@@ -68,6 +69,7 @@ const defaultConfig: AppConfig = {
   automationWorkflows: [],
   versionCode: 1,
   versionName: "1.0",
+  hideSelectors: "",
 };
 
 interface AppState {
