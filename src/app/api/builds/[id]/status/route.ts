@@ -38,9 +38,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           if (ghResponse.ok) {
             const data = await ghResponse.json();
             
-            // Find the most recent completed run that started AFTER this build was created
-            // If none found, just pick the latest run
-            let targetRun = data.workflow_runs.find((run: any) => run.status === 'completed');
+            // Find the workflow run that matches this specific build_id
+            const targetRun = data.workflow_runs.find((run: any) => {
+              const title = run.display_title || run.name || '';
+              return title.includes(params.id);
+            });
             
             if (targetRun && targetRun.status === 'completed') {
               if (targetRun.conclusion === 'success') {
@@ -68,7 +70,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                 }
               } else if (targetRun.conclusion === 'failure' || targetRun.conclusion === 'cancelled') {
                 build.status = 'failed';
-                build.error_message = `GitHub Actions build ${targetRun.conclusion}.`;
+                build.error_message = `GitHub Actions build ${targetRun.conclusion || 'failed'}.`;
                 await build.save();
               }
             }

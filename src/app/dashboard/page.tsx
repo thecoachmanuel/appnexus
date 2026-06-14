@@ -95,6 +95,22 @@ const Dashboard = () => {
     fetchProjects();
   }, []);
 
+  // Poll projects status if there are active builds in progress
+  useEffect(() => {
+    if (!user) return;
+    
+    const hasActiveBuilds = projectsWithBuilds.some(
+      (p) => p.latestBuild?.status === 'building' || p.latestBuild?.status === 'queued' || p.latestBuild?.status === 'processing'
+    );
+    
+    if (hasActiveBuilds) {
+      const interval = setInterval(() => {
+        fetchProjects();
+      }, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [user, projectsWithBuilds.map(p => p.latestBuild?.status).join(',')]);
+
   // Real-time updates for app builds (project status changes)
   useRealtime({
     table: 'app_builds',

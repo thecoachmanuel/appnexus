@@ -6,7 +6,7 @@ import { AppProject } from '@/lib/models/AppProject';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { build_id, status, artifact_id } = body;
+    const { build_id, status, artifact_id, error_message } = body;
 
     if (!build_id) {
       return NextResponse.json({ error: 'Missing build_id' }, { status: 400 });
@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     
     if (status === 'complete') {
       build.progress = 100;
+    } else if (status === 'failed') {
+      build.progress = 100;
+      build.error_message = error_message || 'Build failed.';
     }
 
     if (artifact_id) {

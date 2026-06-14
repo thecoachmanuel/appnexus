@@ -104,6 +104,22 @@ const BuildHistory = ({ onRebuild }: BuildHistoryProps) => {
     }
   }, [user]);
 
+  // Poll build history if there are active builds in progress
+  useEffect(() => {
+    if (!user) return;
+    
+    const hasActiveBuilds = builds.some(
+      (b) => b.status === 'building' || b.status === 'queued' || b.status === 'processing'
+    );
+    
+    if (hasActiveBuilds) {
+      const interval = setInterval(() => {
+        fetchBuilds();
+      }, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [user, builds.map(b => b.status).join(',')]);
+
   const fetchBuilds = async () => {
     if (!user) return;
 
