@@ -2,12 +2,20 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import { AppBuild } from '@/lib/models/AppBuild';
 import { ApiConfiguration } from '@/lib/models/ApiConfiguration';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const build = await AppBuild.findById(params.id);
     if (!build) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    if (build.user_id !== user._id.toString() && user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const requestUrl = new URL(req.url);
     const artifactId = requestUrl.searchParams.get('artifact_id');

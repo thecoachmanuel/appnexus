@@ -36,6 +36,25 @@ const userSchema = new mongoose.Schema({
   credits: {
     type: Number,
     default: 0
+  },
+  plan_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SubscriptionPlan',
+    default: null
+  },
+  billing_cycle: {
+    type: String,
+    enum: ['monthly', 'yearly'],
+    default: 'monthly'
+  },
+  subscription_status: {
+    type: String,
+    enum: ['active', 'canceled', 'past_due', 'none'],
+    default: 'none'
+  },
+  subscription_end_date: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 

@@ -35,7 +35,7 @@ export const userApi = {
   updateProfile: (updates: any) => handleApi(fetchApi('/api/auth/me', { method: 'PUT', body: JSON.stringify(updates) })),
   getCredits: () => handleApi(fetchApi('/api/auth/me')),
   useCredits: (...args: any[]) => handleApi(Promise.resolve({ success: true })),
-  getSubscription: (...args: any[]) => handleApi(Promise.resolve(null)),
+  getSubscription: () => handleApi(fetchApi('/api/subscriptions')),
   getCreditHistory: (...args: any[]) => handleApi(Promise.resolve([])),
   deleteAccount: (...args: any[]) => handleApi(Promise.resolve({ message: 'Deleted' })),
   getTransactions: (...args: any[]) => handleApi(fetchApi('/api/transactions')),
@@ -334,9 +334,12 @@ export const apiClient = {
 export const stripeApi = {
   createCreditsCheckout: (priceId: string, returnUrl: string, cancelUrl?: string) => handleApi(fetchApi('/api/payments/checkout', {
     method: 'POST',
-    body: JSON.stringify({ priceId, returnUrl, cancelUrl })
+    body: JSON.stringify({ type: 'credits', priceId, returnUrl, cancelUrl })
   })),
-  createSubscriptionCheckout: (priceId: string, billingCycle: string, returnUrl: string, cancelUrl?: string) => handleApi(Promise.resolve({})),
+  createSubscriptionCheckout: (planId: string, billingCycle: string, returnUrl: string, cancelUrl?: string) => handleApi(fetchApi('/api/payments/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ type: 'subscription', planId, billingCycle, returnUrl, cancelUrl })
+  })),
   createPortalSession: (returnUrl: string) => handleApi(Promise.resolve({}))
 };
 
