@@ -93,6 +93,12 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
   const { settings } = useSystemSettings();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('project');
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId);
+
+  useEffect(() => {
+    setCurrentProjectId(projectId);
+  }, [projectId]);
+
   const { playSuccess, playError } = useNotificationSounds();
   const { notifyBuildComplete, notifyBuildFailed, requestPermission, permission, isSupported } = useBrowserNotifications();
   const { queue, addToQueue, updateBuild, removeBuild, clearCompleted, canStartNewBuild } = useBuildQueue();
@@ -236,8 +242,8 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         build_status: "complete",
       };
 
-      const { error } = projectId 
-        ? await projectsApi.update(projectId, projectPayload)
+      const { error } = currentProjectId 
+        ? await projectsApi.update(currentProjectId, projectPayload)
         : await projectsApi.create(projectPayload);
 
       if (error) throw error;
@@ -305,6 +311,13 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
         }
+        if (currentProjectId) {
+          try {
+            await projectsApi.update(currentProjectId, { build_status: "failed" });
+          } catch (err) {
+            console.error("Failed to update project status on failure:", err);
+          }
+        }
         playError();
         notifyBuildFailed(config.appName || "AppNexus", build.error_message || undefined);
         toast({
@@ -358,8 +371,8 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     setAppetizePublicKey(null);
 
     // Use provided config (from rebuild) or current config
-    const buildParams = buildConfig || {
-      projectId: projectId || undefined,
+    const buildParams = (buildConfig ? { ...buildConfig } : {
+      projectId: currentProjectId || undefined,
       websiteUrl: config.websiteUrl,
       appName: config.appName || "AppNexus",
       primaryColor: config.primaryColor,
@@ -373,7 +386,60 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       versionCode: config.versionCode || 1,
       versionName: config.versionName || "1.0",
       hideSelectors: config.hideSelectors || "",
-    };
+    }) as Record<string, any>;
+
+    let activeProjectId = buildParams.projectId || currentProjectId;
+
+    // Create or update the project record in MongoDB first
+    try {
+      const projectPayload = {
+        website_url: buildParams.websiteUrl || config.websiteUrl,
+        app_name: buildParams.appName || config.appName || "AppNexus",
+        primary_color: buildParams.primaryColor || config.primaryColor,
+        accent_color: buildParams.accentColor || config.accentColor,
+        navigation_style: buildParams.navigationStyle || config.navigationStyle,
+        features: buildParams.features || config.suggestedFeatures,
+        app_category: buildParams.appCategory || config.appCategory,
+        description: buildParams.description || config.description,
+        icon_style: buildParams.iconStyle || config.iconStyle,
+        splash_screen_style: buildParams.splashScreenStyle || config.splashScreenStyle,
+        build_status: "building",
+      };
+
+      if (!activeProjectId) {
+        // Create new project
+        const { data: newProject, error: projectError } = await projectsApi.create(projectPayload);
+        if (projectError) throw projectError;
+        if (newProject && newProject.id) {
+          activeProjectId = newProject.id;
+          setCurrentProjectId(newProject.id);
+          
+          // Update query param in URL without full reload/routing
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('project', newProject.id);
+            window.history.replaceState({}, '', url.toString());
+          }
+        }
+      } else {
+        // Update existing project
+        const { error: projectError } = await projectsApi.update(activeProjectId, projectPayload);
+        if (projectError) throw projectError;
+      }
+    } catch (projectErr) {
+      console.error("Failed to create/update project record:", projectErr);
+      setBuildStatus("failed");
+      setErrorMessage("Could not initialize the project record. Please try again.");
+      toast({
+        title: "Build Init Failed",
+        description: "Could not create/update the project record in MongoDB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Set the finalized projectId in buildParams
+    buildParams.projectId = activeProjectId;
 
     // Determine which build method to use based on platform
     const platformName = selectedPlatform === "ios" ? "iOS" : "Android";
@@ -417,6 +483,16 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       console.error("Build error:", error);
       setBuildStatus("failed");
       setErrorMessage(error instanceof Error ? error.message : "Unknown error");
+      
+      // Update project status to failed since the build trigger failed
+      if (activeProjectId) {
+        try {
+          await projectsApi.update(activeProjectId, { build_status: "failed" });
+        } catch (updateErr) {
+          console.error("Failed to update project status on trigger failure:", updateErr);
+        }
+      }
+      
       toast({
         title: "Build Failed",
         description: error instanceof Error ? error.message : "Could not start the build.",
@@ -425,7 +501,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     }
   };
 
-  const handleRebuild = (build: { app_name: string; website_url: string; config: Record<string, unknown> }) => {
+  const handleRebuild = (build: { app_name: string; website_url: string; project_id?: string | null; config: Record<string, unknown> }) => {
     const previousVersionCode = Number(build.config?.versionCode) || 1;
     const previousVersionName = (build.config?.versionName as string) || "1.0";
     
@@ -447,6 +523,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
     // Include websiteUrl and appName from the build record since they're stored separately
     startBuild({
       ...build.config,
+      projectId: build.project_id || undefined,
       websiteUrl: build.website_url,
       appName: build.app_name,
       versionCode: newVersionCode,

@@ -33,6 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface Build {
   id: string;
+  project_id?: string | null;
   app_name: string;
   website_url: string;
   status: string;

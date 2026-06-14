@@ -100,7 +100,7 @@ const Dashboard = () => {
     if (!user) return;
     
     const hasActiveBuilds = projectsWithBuilds.some(
-      (p) => p.latestBuild?.status === 'building' || p.latestBuild?.status === 'queued' || p.latestBuild?.status === 'processing'
+      (p) => p.build_status === 'building' || p.latestBuild?.status === 'building' || p.latestBuild?.status === 'queued' || p.latestBuild?.status === 'processing'
     );
     
     if (hasActiveBuilds) {
@@ -109,7 +109,7 @@ const Dashboard = () => {
       }, 8000);
       return () => clearInterval(interval);
     }
-  }, [user, projectsWithBuilds.map(p => p.latestBuild?.status).join(',')]);
+  }, [user, projectsWithBuilds.map(p => `${p.build_status}-${p.latestBuild?.status}`).join(',')]);
 
   // Real-time updates for app builds (project status changes)
   useRealtime({
@@ -185,6 +185,8 @@ const Dashboard = () => {
         return "bg-accent/10 text-accent border border-accent/20";
       case "building":
         return "bg-accent/5 text-accent/80 border border-accent/10";
+      case "failed":
+        return "bg-destructive/10 text-destructive border border-destructive/20";
       default:
         return "bg-muted text-muted-foreground";
     }
