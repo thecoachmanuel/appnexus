@@ -26,7 +26,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         const githubConfig = await ApiConfiguration.findOne({ provider: 'github', is_active: true });
         
         if (githubConfig && githubConfig.config?.github_pat) {
-          const { github_pat, repo_owner, repo_name, workflow_id } = githubConfig.config;
+          const github_pat = githubConfig.config.github_pat?.trim();
+          const repo_owner = githubConfig.config.repo_owner?.trim();
+          const repo_name = githubConfig.config.repo_name?.trim();
+          const workflow_id = githubConfig.config.workflow_id?.trim();
+
           const ghResponse = await fetch(`https://api.github.com/repos/${repo_owner}/${repo_name}/actions/workflows/${workflow_id || 'build-android.yml'}/runs?per_page=5`, {
             headers: { 
               'Authorization': `token ${github_pat}`,

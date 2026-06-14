@@ -72,7 +72,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'GitHub Actions is not configured.' }, { status: 400 });
     }
 
-    const { github_pat, repo_owner, repo_name, workflow_id } = githubConfig.config;
+    const github_pat = githubConfig.config.github_pat?.trim();
+    const repo_owner = githubConfig.config.repo_owner?.trim();
+    const repo_name = githubConfig.config.repo_name?.trim();
+    const workflow_id = githubConfig.config.workflow_id?.trim();
     const webhook_url = `${baseUrl}/api/webhooks/github`;
 
     const ghResponse = await fetch(`https://api.github.com/repos/${repo_owner}/${repo_name}/actions/workflows/${workflow_id || 'build-android.yml'}/dispatches`, {
