@@ -39,14 +39,18 @@ const pageTransition = {
 };
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { projectsApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
-const AppBuilder = () => {
-  const { currentStep, goToStep, config, updateConfig, setConfig, isAnalyzing, setIsAnalyzing } = useAppStore();
+const BuilderContent = () => {
+  const { currentStep, goToStep, config, updateConfig, setConfig, resetBuilder, isAnalyzing, setIsAnalyzing } = useAppStore();
   const { settings } = useSystemSettings();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -58,6 +62,46 @@ const AppBuilder = () => {
   useEffect(() => {
     document.title = `${settings.app_name} - App Builder`;
   }, [settings.app_name]);
+
+  // Load project from URL if provided
+  useEffect(() => {
+    const projectId = searchParams.get('project');
+    if (projectId && user) {
+      const loadProject = async () => {
+        try {
+          const { data, error } = await projectsApi.get(projectId);
+          if (error) throw error;
+          
+          if (data) {
+            updateConfig({
+              websiteUrl: data.website_url || "",
+              appName: data.app_name || "",
+              primaryColor: data.primary_color || "#22D3EE",
+              accentColor: data.accent_color || "#A855F7",
+              navigationStyle: data.navigation_style || "bottom-nav",
+              appCategory: data.app_category || "",
+              description: data.description || "",
+              iconStyle: data.icon_style || "modern",
+              splashScreenStyle: data.splash_screen_style || "centered-logo",
+              suggestedFeatures: data.features || [],
+            });
+            // If it's a loaded project, we can jump to Configure step
+            goToStep(2);
+          }
+        } catch (error) {
+          console.error("Failed to load project:", error);
+          toast({
+            title: "Access Denied",
+            description: "You don't have access to this project or it doesn't exist.",
+            variant: "destructive"
+          });
+          resetBuilder();
+          router.replace('/builder');
+        }
+      };
+      loadProject();
+    }
+  }, [searchParams, user, updateConfig, goToStep, toast, router, resetBuilder]);
 
   if (authLoading || (!user && !authLoading)) {
     return <LoadingSpinner fullScreen />;
@@ -170,6 +214,14 @@ const AppBuilder = () => {
         </Suspense>
       </div>
     </TooltipProvider>
+  );
+};
+
+const AppBuilder = () => {
+  return (
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
+      <BuilderContent />
+    </Suspense>
   );
 };
 
