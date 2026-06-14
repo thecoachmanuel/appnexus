@@ -54,12 +54,25 @@ jobs:
           mkdir -p dist
           cat << 'EOF' > generate_config.cjs
           const fs = require('fs');
+          const urlStr = process.env.WEBSITE_URL;
+          let allowNavigation = [];
+          try {
+            const urlObj = new URL(urlStr);
+            const hostname = urlObj.hostname;
+            const domainParts = hostname.split('.');
+            const apexDomain = domainParts.length > 2 ? domainParts.slice(-2).join('.') : hostname;
+            allowNavigation = [hostname, `*.${hostname}`, apexDomain, `*.${apexDomain}`];
+          } catch (e) {
+            console.error('Invalid URL:', urlStr);
+          }
+          
           const cfg = {
             appId: process.env.PACKAGE_NAME,
             appName: process.env.APP_NAME,
             webDir: 'dist',
             server: {
-              url: process.env.WEBSITE_URL,
+              url: urlStr,
+              allowNavigation: allowNavigation,
               cleartext: true
             }
           };
