@@ -21,6 +21,9 @@ on:
         description: 'Webhook URL for status updates'
         required: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -76,7 +79,6 @@ jobs:
       - name: Setup Android Project
         run: |
           rm -rf android
-          npx cap init "${{ github.event.inputs.app_name }}" "${{ github.event.inputs.package_name }}" --web-dir dist
           npx cap add android
           npx cap sync android
 
