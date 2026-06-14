@@ -36,7 +36,7 @@ jobs:
           cache: 'npm'
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '21'
@@ -47,7 +47,7 @@ jobs:
       - name: Generate Capacitor Config
         run: |
           rm -f capacitor.config.ts capacitor.config.js capacitor.config.json
-          cat << 'EOF' > generate_config.js
+          cat << 'EOF' > generate_config.cjs
           const fs = require('fs');
           const cfg = {
             appId: process.env.PACKAGE_NAME,
@@ -64,7 +64,7 @@ jobs:
             `import type { CapacitorConfig } from '@capacitor/cli';\n\nconst config: CapacitorConfig = ${JSON.stringify(cfg, null, 2)};\n\nexport default config;\n`
           );
           EOF
-          node generate_config.js
+          node generate_config.cjs
         env:
           APP_NAME: ${{ github.event.inputs.app_name }}
           PACKAGE_NAME: ${{ github.event.inputs.package_name }}
