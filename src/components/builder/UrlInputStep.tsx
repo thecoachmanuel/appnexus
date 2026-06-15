@@ -56,6 +56,7 @@ interface AnalysisResult {
   splashScreenStyle: string;
   recommendations: string[];
   hideSelectors?: string;
+  customNavItems?: { label: string; url: string; icon: string }[];
 }
 
 interface UrlInputStepProps {
@@ -145,6 +146,7 @@ const UrlInputStep = ({
           splashScreenStyle: data.config.splash_screen_style || "centered-logo",
           recommendations: [],
           hideSelectors: data.config.hide_selectors || "",
+          customNavItems: data.config.navigation_items || [],
         };
         
         setAnalysisResult(result);

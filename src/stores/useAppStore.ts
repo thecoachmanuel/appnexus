@@ -6,6 +6,7 @@ export type AIProvider = "gemini" | "openai";
 export interface NavItem {
   icon: string;
   label: string;
+  url?: string;
 }
 
 export interface ProjectAsset {

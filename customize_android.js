@@ -19,6 +19,50 @@ const rawHideSelectors = config.hideSelectors || 'header, footer, nav, [role="na
 const hideSelectors = rawHideSelectors.replace(/"/g, '\\"');
 const paddingBottom = navigationStyle === 'bottom-nav' ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
 
+// Parse customNavItems
+let menuJava = '';
+let menuClicksJava = '';
+const navItems = (config.customNavItems && config.customNavItems.length > 0) 
+  ? config.customNavItems 
+  : [
+      { label: 'Home', url: websiteUrl, icon: 'home' },
+      { label: 'Back', url: 'javascript:window.history.back()', icon: 'arrow_back' },
+      { label: 'Forward', url: 'javascript:window.history.forward()', icon: 'arrow_forward' },
+      { label: 'Reload', url: 'javascript:window.location.reload()', icon: 'refresh' }
+    ];
+
+navItems.forEach((item, index) => {
+  const id = index + 1;
+  let iconRes = 'android.R.drawable.ic_menu_compass';
+  if (item.icon === 'home') iconRes = 'android.R.drawable.ic_menu_compass';
+  else if (item.icon === 'arrow_back') iconRes = 'android.R.drawable.ic_menu_revert';
+  else if (item.icon === 'arrow_forward') iconRes = 'android.R.drawable.ic_media_next';
+  else if (item.icon === 'refresh') iconRes = 'android.R.drawable.ic_popup_sync';
+  else if (item.icon === 'shopping_cart') iconRes = 'android.R.drawable.ic_menu_agenda';
+  else if (item.icon === 'person') iconRes = 'android.R.drawable.ic_menu_myplaces';
+  else if (item.icon === 'settings') iconRes = 'android.R.drawable.ic_menu_preferences';
+  else if (item.icon === 'search') iconRes = 'android.R.drawable.ic_menu_search';
+  else iconRes = 'android.R.drawable.ic_menu_compass'; // default
+
+  menuJava += `                                menu.add(0, ${id}, 0, "${item.label}").setIcon(${iconRes});\n`;
+  
+  if (item.url === 'javascript:window.history.back()') {
+      menuClicksJava += `                                        } else if (id == ${id}) { webView.post(() -> { if(webView.canGoBack()) webView.goBack(); }); return true;\n`;
+  } else if (item.url === 'javascript:window.history.forward()') {
+      menuClicksJava += `                                        } else if (id == ${id}) { webView.post(() -> { if(webView.canGoForward()) webView.goForward(); }); return true;\n`;
+  } else if (item.url === 'javascript:window.location.reload()') {
+      menuClicksJava += `                                        } else if (id == ${id}) { webView.post(() -> webView.reload()); return true;\n`;
+  } else {
+      let fullUrl = item.url;
+      if (item.url.startsWith('/')) {
+        const base = websiteUrl.endsWith('/') ? websiteUrl.slice(0, -1) : websiteUrl;
+        fullUrl = `${base}${item.url}`;
+      }
+      menuClicksJava += `                                        } else if (id == ${id}) { webView.post(() -> webView.loadUrl("${fullUrl}")); return true;\n`;
+  }
+});
+menuClicksJava = menuClicksJava.replace('} else if', 'if');
+
 // 1. Write the premium dark-mode offline error page to dist/
 const errorHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -229,29 +273,14 @@ public class MainActivity extends BridgeActivity {
                                 bottomNav.setItemTextColor(csl);
                                 
                                 android.view.Menu menu = bottomNav.getMenu();
-                                menu.add(0, 1, 0, "Home").setIcon(android.R.drawable.ic_menu_compass);
-                                menu.add(0, 2, 0, "Back").setIcon(android.R.drawable.ic_menu_revert);
-                                menu.add(0, 3, 0, "Forward").setIcon(android.R.drawable.ic_media_next);
-                                menu.add(0, 4, 0, "Reload").setIcon(android.R.drawable.ic_popup_sync);
+${menuJava}
                                 
                                 bottomNav.setOnItemSelectedListener(new com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener() {
                                     @Override
                                     public boolean onNavigationItemSelected(android.view.MenuItem item) {
                                         WebView webView = currentBridge.getWebView();
                                         int id = item.getItemId();
-                                        if (id == 1) {
-                                            webView.post(() -> webView.loadUrl("${websiteUrl}"));
-                                            return true;
-                                        } else if (id == 2) {
-                                            webView.post(() -> { if(webView.canGoBack()) webView.goBack(); });
-                                            return true;
-                                        } else if (id == 3) {
-                                            webView.post(() -> { if(webView.canGoForward()) webView.goForward(); });
-                                            return true;
-                                        } else if (id == 4) {
-                                            webView.post(() -> webView.reload());
-                                            return true;
-                                        }
+${menuClicksJava}
                                         return false;
                                     }
                                 });

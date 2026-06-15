@@ -272,9 +272,14 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
 
   const handleApplyTemplate = (template: Template) => {
     onUpdate({
-      appName: template.config.appName,
-      primaryColor: template.config.primaryColor,
-      accentColor: template.config.accentColor,
+      // Retain AI or User-defined Brand Info, fallback to Template
+      appName: config.appName || template.config.appName,
+      primaryColor: config.primaryColor || template.config.primaryColor,
+      accentColor: config.accentColor || template.config.accentColor,
+      hideSelectors: config.hideSelectors || template.config.hideSelectors || "",
+      customNavItems: (config.customNavItems && config.customNavItems.length > 0) ? config.customNavItems : template.config.customNavItems,
+      
+      // Override Structure/Styling with Template Config
       navigationStyle: template.config.navigationStyle,
       suggestedFeatures: template.config.suggestedFeatures,
       appCategory: template.config.appCategory,
@@ -282,7 +287,6 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
       iconStyle: template.config.iconStyle,
       splashScreenStyle: template.config.splashScreenStyle,
       recommendations: template.config.recommendations || [],
-      hideSelectors: template.config.hideSelectors || "",
     });
 
     toast({
@@ -343,6 +347,7 @@ const ConfigureStep = ({ config, onUpdate, onBack, onNext }: ConfigureStepProps)
           splashScreenStyle: data.config.splash_screen_style || config.splashScreenStyle,
           recommendations: config.recommendations,
           hideSelectors: data.config.hide_selectors || config.hideSelectors,
+          customNavItems: data.config.navigation_items || config.customNavItems,
         });
 
         toast({

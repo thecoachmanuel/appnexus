@@ -61,7 +61,19 @@ async function configureApp() {
     .filter(Boolean)
     .join(', ');
 
-  fs.writeFileSync(configPath, JSON.stringify(response, null, 2), 'utf8');
+  let existingConfig = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch (e) {}
+  }
+
+  const finalConfig = {
+    ...existingConfig,
+    ...response
+  };
+
+  fs.writeFileSync(configPath, JSON.stringify(finalConfig, null, 2), 'utf8');
   console.log(chalk.green.bold('\nSuccess! Configuration saved to appnexus.config.json\n'));
 }
 
