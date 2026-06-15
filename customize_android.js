@@ -305,5 +305,18 @@ ${menuClicksJava}
 } else {
     console.error('MainActivity.java not found in project paths.');
 }
+const buildGradlePath = 'android/app/build.gradle';
+if (fs.existsSync(buildGradlePath)) {
+    let gradleContent = fs.readFileSync(buildGradlePath, 'utf8');
+    if (!gradleContent.includes('com.google.android.material:material')) {
+        gradleContent = gradleContent.replace(
+            /dependencies\s*\{/,
+            "dependencies {\n    implementation 'com.google.android.material:material:1.11.0'"
+        );
+        fs.writeFileSync(buildGradlePath, gradleContent, 'utf8');
+        console.log('build.gradle successfully updated with Material UI dependency.');
+    }
+}
+
 console.log('--- Customization complete ---');
 process.exit(0);
