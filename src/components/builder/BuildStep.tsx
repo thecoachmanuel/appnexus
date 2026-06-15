@@ -386,6 +386,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
       versionCode: config.versionCode || 1,
       versionName: config.versionName || "1.0",
       hideSelectors: config.hideSelectors || "",
+      customNavItems: config.customNavItems || [],
     }) as Record<string, any>;
 
     let activeProjectId = buildParams.projectId || currentProjectId;
@@ -403,6 +404,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         description: buildParams.description || config.description,
         icon_style: buildParams.iconStyle || config.iconStyle,
         splash_screen_style: buildParams.splashScreenStyle || config.splashScreenStyle,
+        custom_nav_items: buildParams.customNavItems || config.customNavItems || [],
         build_status: "building",
       };
 

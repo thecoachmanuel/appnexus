@@ -89,6 +89,7 @@ const BuilderContent = () => {
               iconStyle: data.icon_style || "modern",
               splashScreenStyle: data.splash_screen_style || "centered-logo",
               suggestedFeatures: data.features || [],
+              customNavItems: data.custom_nav_items || [],
             });
             // If it's a loaded project and we are on the first step, jump to Configure
             if (useAppStore.getState().currentStep === 1) {

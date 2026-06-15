@@ -36,7 +36,11 @@ on:
       hide_selectors:
         description: 'CSS selectors to hide'
         required: false
-        default: 'header, footer, nav'
+        default: 'footer, nav, [role="navigation"]'
+      custom_nav_items:
+        description: 'JSON array of custom navigation items'
+        required: false
+        default: '[]'
 
 
 
@@ -99,12 +103,28 @@ jobs:
             'capacitor.config.ts',
             `import type { CapacitorConfig } from '@capacitor/cli';\n\nconst config: CapacitorConfig = ${JSON.stringify(cfg, null, 2)};\n\nexport default config;\n`
           );
+          
+          // Generate appnexus config
+          const appnexusCfg = {
+            primaryColor: process.env.PRIMARY_COLOR,
+            accentColor: process.env.ACCENT_COLOR,
+            navigationStyle: process.env.NAVIGATION_STYLE,
+            websiteUrl: process.env.WEBSITE_URL,
+            hideSelectors: process.env.HIDE_SELECTORS,
+            customNavItems: JSON.parse(process.env.CUSTOM_NAV_ITEMS || '[]')
+          };
+          fs.writeFileSync('appnexus.config.json', JSON.stringify(appnexusCfg, null, 2));
           EOF
           node generate_config.cjs
         env:
           APP_NAME: ${{ github.event.inputs.app_name }}
           PACKAGE_NAME: ${{ github.event.inputs.package_name }}
           WEBSITE_URL: ${{ github.event.inputs.website_url }}
+          PRIMARY_COLOR: ${{ github.event.inputs.primary_color }}
+          ACCENT_COLOR: ${{ github.event.inputs.accent_color }}
+          NAVIGATION_STYLE: ${{ github.event.inputs.navigation_style }}
+          HIDE_SELECTORS: ${{ github.event.inputs.hide_selectors }}
+          CUSTOM_NAV_ITEMS: ${{ github.event.inputs.custom_nav_items }}
 
       - name: Build Web App
         run: npm run build
@@ -115,12 +135,6 @@ jobs:
           npx cap add android
           node customize_android.js
           npx cap sync android
-        env:
-          PRIMARY_COLOR: ${{ github.event.inputs.primary_color }}
-          ACCENT_COLOR: ${{ github.event.inputs.accent_color }}
-          NAVIGATION_STYLE: ${{ github.event.inputs.navigation_style }}
-          WEBSITE_URL: ${{ github.event.inputs.website_url }}
-          HIDE_SELECTORS: ${{ github.event.inputs.hide_selectors }}
 
 
       - name: Build APK

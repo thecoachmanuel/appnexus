@@ -38,6 +38,10 @@ const appProjectSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  custom_nav_items: {
+    type: [mongoose.Schema.Types.Mixed],
+    default: []
+  },
   icon_style: {
     type: String,
     default: null

@@ -55,7 +55,7 @@ export async function POST(req: Request) {
           features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
           description: `${appName} mobile app – fast, native experience for your users.`,
-          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
+          hide_selectors: 'footer, nav, .footer, .navbar'
         }
       });
     }
@@ -84,7 +84,7 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
     "features": ["string", "string", "string"],
     "app_category": "string (e.g. E-commerce, Social, Productivity, Education, Healthcare)",
     "description": "string (A 1-2 sentence description of what the app does)",
-    "hide_selectors": "string (A comma-separated list of CSS selectors that target headers, footers, cookie banners, navigation menus, and banners to hide them from WebView, e.g. 'header.site-header, div#mobile-nav, footer.site-footer, div.cookie-banner')",
+    "hide_selectors": "string (A comma-separated list of CSS selectors that target footers, cookie banners, and download app banners to hide them from WebView, e.g. 'footer.site-footer, div.cookie-banner'. DO NOT hide headers or top navigation bars.)",
     "navigation_items": [
       {
         "label": "string (Short menu label like 'Home', 'Shop', 'Profile', max 4 items)",
@@ -120,7 +120,7 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
           features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
           description: `${appName} mobile app.`,
-          hide_selectors: 'header, footer, nav, .header, .footer, .navbar',
+          hide_selectors: 'footer, nav, .footer, .navbar',
           navigation_items: [
             { label: 'Home', url: '/', icon: 'home' },
             { label: 'Back', url: 'javascript:window.history.back()', icon: 'arrow_back' },

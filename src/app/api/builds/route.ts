@@ -107,7 +107,8 @@ export async function POST(req: Request) {
           primary_color: body.primaryColor || '#22d3ee',
           accent_color: body.accentColor || '#a855f7',
           navigation_style: body.navigationStyle || 'bottom-nav',
-          hide_selectors: body.hideSelectors || 'header, footer, nav'
+          hide_selectors: body.hideSelectors !== undefined ? body.hideSelectors : 'footer, nav, [role="navigation"]',
+          custom_nav_items: JSON.stringify(body.customNavItems || [])
         }
       })
     });
