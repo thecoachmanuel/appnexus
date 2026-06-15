@@ -65,14 +65,16 @@ export async function POST(req: Request) {
 
     const cleanedHtml = htmlContent ? cleanHtml(htmlContent) : '';
 
-    const prompt = `Analyze the website URL: ${url}.
+    const prompt = `You are an expert mobile app configuration AI. Analyze the website URL: ${url}.
 ${cleanedHtml ? `Here is a structural snippet of the website's HTML:\n${cleanedHtml}\n` : ''}
-Based on the website ${cleanedHtml ? 'HTML, meta tags, and tag classes' : 'domain name and purpose'}, generate a highly optimized mobile app wrapper configuration.
+${cleanedHtml.length < 1000 ? `The provided HTML is very short or missing. You MUST use your Google Search capabilities to search for this website, explore its content, and identify its primary navigation links and brand colors.` : ''}
+
+Based on the website's live content, purpose, and HTML snippet, generate a highly optimized mobile app wrapper configuration. Take your time to patiently analyze the site's true purpose and structure.
 
 Specifically, analyze:
-1. Brand colors: intelligently identify the site's primary color theme. Look for 'theme-color' meta tags, dominant background colors in CSS headers, primary button colors, or CSS variables (like --primary). Return exactly two colors: a primary_color and an accent_color.
-2. Layout header and footer: identify the CSS classes or IDs used for the main website navigation headers, mobile menus, site footers, cookie prompts, or promotional banners.
-3. App category, name, and descriptions.
+1. Brand colors: intelligently identify the site's primary color theme. Return exactly two colors: a primary_color and an accent_color.
+2. App category, name, and descriptions.
+3. Custom Navigation Menu: Carefully determine the 4 most important pages/links on this website (e.g. Home, Shop, About Us, Contact, Dashboard). Create a custom bottom navigation menu specific to this website. Do NOT just use generic Forward/Back buttons unless it is a single page web app.
 
 Return ONLY a raw JSON object with the following structure (no markdown, no backticks, no text wrap):
 {
@@ -87,8 +89,8 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
     "hide_selectors": "string (A comma-separated list of CSS selectors that target footers, cookie banners, and download app banners to hide them from WebView, e.g. 'footer.site-footer, div.cookie-banner'. DO NOT hide headers or top navigation bars.)",
     "navigation_items": [
       {
-        "label": "string (Short menu label like 'Home', 'Shop', 'Profile', max 4 items)",
-        "url": "string (The URL path, e.g., '/' or '/shop' or '/about')",
+        "label": "string (Short, accurate menu label specific to this site, max 4 items)",
+        "url": "string (The URL path specific to this site, e.g., '/' or '/shop' or '/dashboard')",
         "icon": "string (A generic material icon name, e.g., 'home', 'shopping_cart', 'person', 'settings')"
       }
     ]
@@ -96,8 +98,12 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-2.5-flash',
       contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+        temperature: 0.2
+      }
     });
 
     const text = response.text || '';
