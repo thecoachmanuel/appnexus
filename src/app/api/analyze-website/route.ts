@@ -98,7 +98,7 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
