@@ -21,7 +21,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     // Localhost fallback: GitHub webhooks cannot reach localhost.
     // If we're on localhost and the build is still 'building', actively poll GitHub.
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const requestUrl = new URL(req.url);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || requestUrl.origin;
     if (build.status === 'building' && (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1'))) {
       try {
         const { ApiConfiguration } = await import('@/lib/models/ApiConfiguration');
