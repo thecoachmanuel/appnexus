@@ -62,6 +62,9 @@ navItems.forEach((item, index) => {
   }
 });
 menuClicksJava = menuClicksJava.replace('} else if', 'if');
+if (menuClicksJava.trim().length > 0) {
+  menuClicksJava += '                                        }\n';
+}
 
 // 1. Write the premium dark-mode offline error page to dist/
 const errorHtml = `<!DOCTYPE html>
