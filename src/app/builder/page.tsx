@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, Suspense } from "react";
+import { useCallback, useEffect, Suspense, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -63,12 +63,15 @@ const BuilderContent = () => {
     document.title = `${settings.app_name} - App Builder`;
   }, [settings.app_name]);
 
+  const loadedProjectId = useRef<string | null>(null);
+
   // Load project from URL or reset if new
   useEffect(() => {
     const projectId = searchParams.get('project');
     const isNew = searchParams.get('new') === 'true';
 
-    if (projectId && user) {
+    if (projectId && user && loadedProjectId.current !== projectId) {
+      loadedProjectId.current = projectId;
       const loadProject = async () => {
         try {
           const { data, error } = await projectsApi.get(projectId);
@@ -87,8 +90,10 @@ const BuilderContent = () => {
               splashScreenStyle: data.splash_screen_style || "centered-logo",
               suggestedFeatures: data.features || [],
             });
-            // If it's a loaded project, we can jump to Configure step
-            goToStep(2);
+            // If it's a loaded project and we are on the first step, jump to Configure
+            if (useAppStore.getState().currentStep === 1) {
+              goToStep(2);
+            }
           }
         } catch (error) {
           console.error("Failed to load project:", error);
@@ -102,7 +107,8 @@ const BuilderContent = () => {
         }
       };
       loadProject();
-    } else if (isNew) {
+    } else if (isNew && loadedProjectId.current !== 'new') {
+      loadedProjectId.current = 'new';
       resetBuilder();
       router.replace('/builder');
     }
