@@ -248,8 +248,8 @@ public class MainActivity extends BridgeActivity {
                     @Override
                     public void run() {
                         android.view.ViewGroup parent = (android.view.ViewGroup) currentBridge.getWebView().getParent();
-                        if (parent != null && parent instanceof android.widget.FrameLayout) {
-                            android.widget.FrameLayout frame = (android.widget.FrameLayout) parent;
+                        if (parent != null) {
+                            android.view.ViewGroup frame = parent;
                             android.view.ViewGroup grandParent = (android.view.ViewGroup) frame.getParent();
                             if (grandParent != null) {
                                 android.widget.LinearLayout linearLayout = new android.widget.LinearLayout(MainActivity.this);
@@ -258,6 +258,7 @@ public class MainActivity extends BridgeActivity {
                                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                                     android.view.ViewGroup.LayoutParams.MATCH_PARENT
                                 ));
+                                linearLayout.setFitsSystemWindows(true);
                                 
                                 grandParent.removeView(frame);
                                 
