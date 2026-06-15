@@ -70,7 +70,7 @@ ${cleanedHtml ? `Here is a structural snippet of the website's HTML:\n${cleanedH
 Based on the website ${cleanedHtml ? 'HTML, meta tags, and tag classes' : 'domain name and purpose'}, generate a highly optimized mobile app wrapper configuration.
 
 Specifically, analyze:
-1. Brand colors: look for theme-color meta tags, CSS variables, inline styles, or common branding guidelines.
+1. Brand colors: intelligently identify the site's primary color theme. Look for 'theme-color' meta tags, dominant background colors in CSS headers, primary button colors, or CSS variables (like --primary). Return exactly two colors: a primary_color and an accent_color.
 2. Layout header and footer: identify the CSS classes or IDs used for the main website navigation headers, mobile menus, site footers, cookie prompts, or promotional banners.
 3. App category, name, and descriptions.
 
@@ -84,7 +84,14 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
     "features": ["string", "string", "string"],
     "app_category": "string (e.g. E-commerce, Social, Productivity, Education, Healthcare)",
     "description": "string (A 1-2 sentence description of what the app does)",
-    "hide_selectors": "string (A comma-separated list of CSS selectors that target headers, footers, cookie banners, navigation menus, and banners to hide them from WebView, e.g. 'header.site-header, div#mobile-nav, footer.site-footer, div.cookie-banner')"
+    "hide_selectors": "string (A comma-separated list of CSS selectors that target headers, footers, cookie banners, navigation menus, and banners to hide them from WebView, e.g. 'header.site-header, div#mobile-nav, footer.site-footer, div.cookie-banner')",
+    "navigation_items": [
+      {
+        "label": "string (Short menu label like 'Home', 'Shop', 'Profile', max 4 items)",
+        "url": "string (The URL path, e.g., '/' or '/shop' or '/about')",
+        "icon": "string (A generic material icon name, e.g., 'home', 'shopping_cart', 'person', 'settings')"
+      }
+    ]
   }
 }`;
 
@@ -113,7 +120,13 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
           features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
           description: `${appName} mobile app.`,
-          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
+          hide_selectors: 'header, footer, nav, .header, .footer, .navbar',
+          navigation_items: [
+            { label: 'Home', url: '/', icon: 'home' },
+            { label: 'Back', url: 'javascript:window.history.back()', icon: 'arrow_back' },
+            { label: 'Forward', url: 'javascript:window.history.forward()', icon: 'arrow_forward' },
+            { label: 'Reload', url: 'javascript:window.location.reload()', icon: 'refresh' }
+          ]
         }
       };
     }
@@ -135,7 +148,13 @@ Return ONLY a raw JSON object with the following structure (no markdown, no back
           features: ['Push Notifications', 'Offline Mode', 'Pull to Refresh'],
           app_category: 'Productivity',
           description: `${appName} mobile app.`,
-          hide_selectors: 'header, footer, nav, .header, .footer, .navbar'
+          hide_selectors: 'header, footer, nav, .header, .footer, .navbar',
+          navigation_items: [
+            { label: 'Home', url: '/', icon: 'home' },
+            { label: 'Back', url: 'javascript:window.history.back()', icon: 'arrow_back' },
+            { label: 'Forward', url: 'javascript:window.history.forward()', icon: 'arrow_forward' },
+            { label: 'Reload', url: 'javascript:window.location.reload()', icon: 'refresh' }
+          ]
         }
       });
     } catch {
