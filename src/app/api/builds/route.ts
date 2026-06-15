@@ -7,8 +7,6 @@ import { User } from '@/lib/models/User';
 import { SystemSetting } from '@/lib/models/SystemSetting';
 import { verifyToken } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get('Authorization');
@@ -58,14 +56,6 @@ export async function POST(req: Request) {
     // Deduct credits
     user.credits -= creditsPerBuild;
     await user.save();
-
-    const { CreditUsage } = await import('@/lib/models/CreditUsage');
-    await CreditUsage.create({
-      user_id: decoded.id,
-      amount: creditsPerBuild,
-      action_type: 'app_build',
-      description: `Build generated for ${body.appName || 'AppNexus'}`
-    });
 
     const buildId = new mongoose.Types.ObjectId();
     const requestUrl = new URL(req.url);
@@ -131,14 +121,6 @@ export async function POST(req: Request) {
       // Refund credits
       user.credits += creditsPerBuild;
       await user.save();
-
-      const { CreditUsage } = await import('@/lib/models/CreditUsage');
-      await CreditUsage.create({
-        user_id: decoded.id,
-        amount: -creditsPerBuild,
-        action_type: 'refund',
-        description: `Refund for failed GitHub Action dispatch`
-      });
 
       return NextResponse.json({ error: `Failed to trigger GitHub Action: ${ghResponse.statusText}` }, { status: 500 });
     }

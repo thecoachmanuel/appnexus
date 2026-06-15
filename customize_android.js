@@ -15,126 +15,9 @@ const primaryColor = config.primaryColor || '#22d3ee';
 const accentColor = config.accentColor || '#a855f7';
 const navigationStyle = config.navigationStyle || 'bottom-nav';
 const websiteUrl = config.websiteUrl || 'https://appnexus.wrapcoders.com';
-const hideSelectors = config.hideSelectors || 'header, footer, nav, [role="navigation"], .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, .download-app-banner, .app-banner';
+const rawHideSelectors = config.hideSelectors || 'header, footer, nav, [role="navigation"], .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, .download-app-banner, .app-banner';
+const hideSelectors = rawHideSelectors.replace(/"/g, '\\"');
 const paddingBottom = navigationStyle === 'bottom-nav' ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
-
-const customCSS = config.customCSS || '';
-const customJS = config.customJS || '';
-
-const navigationItems = config.navigationItems || [
-  { label: 'Home', icon: 'ic_menu_compass', action: 'home' },
-  { label: 'Back', icon: 'ic_menu_revert', action: 'back' },
-  { label: 'Forward', icon: 'ic_media_next', action: 'forward' },
-  { label: 'Reload', icon: 'ic_popup_sync', action: 'reload' }
-];
-
-let menuJava = '';
-let listenerJava = '';
-
-navigationItems.forEach((item, index) => {
-  const itemId = index + 1;
-  menuJava += `                                menu.add(0, ${itemId}, 0, "${item.label}").setIcon(getResources().getIdentifier("${item.icon || 'ic_menu_info_details'}", "drawable", "android"));\n`;
-  
-  if (item.url) {
-      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.loadUrl("${item.url}"));\n                                            return true;\n`;
-  } else if (item.action === 'back') {
-      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> { if(webView.canGoBack()) webView.goBack(); });\n                                            return true;\n`;
-  } else if (item.action === 'forward') {
-      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> { if(webView.canGoForward()) webView.goForward(); });\n                                            return true;\n`;
-  } else if (item.action === 'reload') {
-      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.reload());\n                                            return true;\n`;
-  } else {
-      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.loadUrl("${websiteUrl}"));\n                                            return true;\n`;
-  }
-});
-
-// To handle the first 'if' correctly:
-listenerJava = listenerJava.replace('} else if', 'if');
-
-let urlMatcherJava = '';
-navigationItems.forEach((item, index) => {
-    const itemId = index + 1;
-    if (item.url) {
-        urlMatcherJava += `                    if (url.contains("${item.url}")) { bottomNav.getMenu().findItem(${itemId}).setChecked(true); return; }\n`;
-    } else if (item.action === 'home') {
-        urlMatcherJava += `                    if (url.equals("${websiteUrl}") || url.equals("${websiteUrl}/")) { bottomNav.getMenu().findItem(${itemId}).setChecked(true); return; }\n`;
-    }
-});
-
-const cssPayload = `
-  ${hideSelectors} { display: none !important; }
-  :root {
-    --primary-color: ${primaryColor} !important;
-    --primary: ${primaryColor} !important;
-    --accent-color: ${accentColor} !important;
-    --accent: ${accentColor} !important;
-  }
-  body { 
-    padding-bottom: ${paddingBottom} !important;
-    padding-top: env(safe-area-inset-top) !important;
-    overscroll-behavior-y: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-touch-callout: none !important;
-    user-select: none !important;
-  }
-  input, textarea, [contenteditable] {
-    user-select: auto !important;
-    -webkit-touch-callout: default !important;
-  }
-  ${customCSS}
-`;
-
-const cssBase64 = Buffer.from(cssPayload).toString('base64');
-const jsBase64 = Buffer.from(customJS).toString('base64');
-
-const syncScript = `
-  const notifyNav = () => {
-    if (window.AppnexusBridge) {
-      window.AppnexusBridge.onUrlChange(window.location.href);
-    }
-  };
-  const originalPushState = history.pushState;
-  if (originalPushState) {
-      history.pushState = function() {
-        originalPushState.apply(this, arguments);
-        notifyNav();
-      };
-  }
-  const originalReplaceState = history.replaceState;
-  if (originalReplaceState) {
-      history.replaceState = function() {
-        originalReplaceState.apply(this, arguments);
-        notifyNav();
-      };
-  }
-  window.addEventListener('popstate', notifyNav);
-  setTimeout(notifyNav, 500); // trigger on load
-  
-  // Biometric Auth Interceptor
-  document.addEventListener('submit', (e) => {
-    const form = e.target;
-    const passwordInput = form.querySelector('input[type="password"]');
-    if (passwordInput) {
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth) {
-         window.Capacitor.Plugins.BiometricAuth.checkBiometry().then((info) => {
-             if (info.isAvailable) {
-                 window.Capacitor.Plugins.BiometricAuth.authenticate({ reason: "Save credentials for auto-login" });
-             }
-         });
-      }
-    }
-  });
-
-  // Haptic Feedback Micro-interactions
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('button, a, [role="button"]')) {
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) {
-        window.Capacitor.Plugins.Haptics.impact({ style: 'Light' });
-      }
-    }
-  });
-`;
-const syncBase64 = Buffer.from(syncScript).toString('base64');
 
 // 1. Write the premium dark-mode offline error page to dist/
 const errorHtml = `<!DOCTYPE html>
@@ -270,24 +153,6 @@ import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
-    
-    class AppnexusJSInterface {
-        private com.google.android.material.bottomnavigation.BottomNavigationView bottomNav;
-        public AppnexusJSInterface(com.google.android.material.bottomnavigation.BottomNavigationView nav) {
-            this.bottomNav = nav;
-        }
-
-        @android.webkit.JavascriptInterface
-        public void onUrlChange(String url) {
-            MainActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-${urlMatcherJava}
-                }
-            });
-        }
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -303,38 +168,21 @@ ${urlMatcherJava}
                             super.onPageFinished(view, url);
                             
                             // Inject CSS to hide web headers, footers and insert theme custom colors
-                            String cssBase64 = "${cssBase64}";
-                            String injectCssJs = "var style = document.createElement('style');" +
+                            String css = "var style = document.createElement('style');" +
                                          "style.id = 'appnexus-style';" +
-                                         "style.innerHTML = atob('" + cssBase64 + "');" +
+                                         "style.innerHTML = '" +
+                                         "  ${hideSelectors} { display: none !important; } " +
+                                         "  :root { " +
+                                         "    --primary-color: ${primaryColor} !important; " +
+                                         "    --primary: ${primaryColor} !important; " +
+                                         "    --accent-color: ${accentColor} !important; " +
+                                         "    --accent: ${accentColor} !important; " +
+                                         "  } " +
+                                         "  body { padding-bottom: ${paddingBottom} !important; } " +
+                                         "';" +
                                          "document.head.appendChild(style);";
                             
-                            view.evaluateJavascript(injectCssJs, null);
-
-                            // Inject AI Custom JS
-                            String jsBase64 = "${jsBase64}";
-                            if (!jsBase64.trim().isEmpty()) {
-                                String injectJs = "try { eval(decodeURIComponent(escape(atob('" + jsBase64 + "')))); } catch(e) { console.error('AI Injection Error:', e); }";
-                                view.evaluateJavascript(injectJs, null);
-                            }
-
-                            // Inject Bidirectional Sync JS
-                            String syncBase64 = "${syncBase64}";
-                            String syncJs = "try { eval(decodeURIComponent(escape(atob('" + syncBase64 + "')))); } catch(e) {}";
-                            view.evaluateJavascript(syncJs, null);
-
-                            // Stop SwipeRefreshLayout spinner if refreshing
-                            android.view.ViewParent parent = view.getParent();
-                            while (parent != null) {
-                                if (parent instanceof androidx.swiperefreshlayout.widget.SwipeRefreshLayout) {
-                                    final androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipe = (androidx.swiperefreshlayout.widget.SwipeRefreshLayout) parent;
-                                    swipe.post(new Runnable() {
-                                        public void run() { swipe.setRefreshing(false); }
-                                    });
-                                    break;
-                                }
-                                parent = parent.getParent();
-                            }
+                            view.evaluateJavascript(css, null);
                         }
 
                         @Override
@@ -368,27 +216,8 @@ ${urlMatcherJava}
                                 
                                 android.widget.LinearLayout.LayoutParams frameParams = new android.widget.LinearLayout.LayoutParams(
                                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
-                                
-                                androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout = new androidx.swiperefreshlayout.widget.SwipeRefreshLayout(MainActivity.this);
-                                swipeRefreshLayout.setLayoutParams(frameParams);
-                                swipeRefreshLayout.setColorSchemeColors(android.graphics.Color.parseColor("${primaryColor}"));
-                                
-                                swipeRefreshLayout.setOnRefreshListener(new androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener() {
-                                    @Override
-                                    public void onRefresh() {
-                                        currentBridge.getWebView().post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                currentBridge.getWebView().reload();
-                                            }
-                                        });
-                                    }
-                                });
-                                
-                                frame.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
-                                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
-                                swipeRefreshLayout.addView(frame);
-                                linearLayout.addView(swipeRefreshLayout);
+                                frame.setLayoutParams(frameParams);
+                                linearLayout.addView(frame);
                                 
                                 com.google.android.material.bottomnavigation.BottomNavigationView bottomNav = new com.google.android.material.bottomnavigation.BottomNavigationView(MainActivity.this);
                                 android.widget.LinearLayout.LayoutParams navParams = new android.widget.LinearLayout.LayoutParams(
@@ -400,20 +229,32 @@ ${urlMatcherJava}
                                 bottomNav.setItemTextColor(csl);
                                 
                                 android.view.Menu menu = bottomNav.getMenu();
-${menuJava}
+                                menu.add(0, 1, 0, "Home").setIcon(android.R.drawable.ic_menu_compass);
+                                menu.add(0, 2, 0, "Back").setIcon(android.R.drawable.ic_menu_revert);
+                                menu.add(0, 3, 0, "Forward").setIcon(android.R.drawable.ic_media_next);
+                                menu.add(0, 4, 0, "Reload").setIcon(android.R.drawable.ic_popup_sync);
                                 
                                 bottomNav.setOnItemSelectedListener(new com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener() {
                                     @Override
                                     public boolean onNavigationItemSelected(android.view.MenuItem item) {
                                         WebView webView = currentBridge.getWebView();
                                         int id = item.getItemId();
-${listenerJava}
+                                        if (id == 1) {
+                                            webView.post(() -> webView.loadUrl("${websiteUrl}"));
+                                            return true;
+                                        } else if (id == 2) {
+                                            webView.post(() -> { if(webView.canGoBack()) webView.goBack(); });
+                                            return true;
+                                        } else if (id == 3) {
+                                            webView.post(() -> { if(webView.canGoForward()) webView.goForward(); });
+                                            return true;
+                                        } else if (id == 4) {
+                                            webView.post(() -> webView.reload());
+                                            return true;
                                         }
                                         return false;
                                     }
                                 });
-                                
-                                currentBridge.getWebView().addJavascriptInterface(new AppnexusJSInterface(bottomNav), "AppnexusBridge");
                                 
                                 linearLayout.addView(bottomNav);
                                 grandParent.addView(linearLayout);
