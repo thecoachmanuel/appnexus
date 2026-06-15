@@ -1,7 +1,140 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 console.log('--- Customizing Android Native App wrapper ---');
+
+let config = {};
+try {
+  const configRaw = fs.readFileSync('appnexus.config.json', 'utf8');
+  config = JSON.parse(configRaw);
+} catch (e) {
+  console.log('No appnexus.config.json found, using defaults.');
+}
+
+const primaryColor = config.primaryColor || '#22d3ee';
+const accentColor = config.accentColor || '#a855f7';
+const navigationStyle = config.navigationStyle || 'bottom-nav';
+const websiteUrl = config.websiteUrl || 'https://appnexus.wrapcoders.com';
+const hideSelectors = config.hideSelectors || 'header, footer, nav, [role="navigation"], .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, .download-app-banner, .app-banner';
+const paddingBottom = navigationStyle === 'bottom-nav' ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
+
+const customCSS = config.customCSS || '';
+const customJS = config.customJS || '';
+
+const navigationItems = config.navigationItems || [
+  { label: 'Home', icon: 'ic_menu_compass', action: 'home' },
+  { label: 'Back', icon: 'ic_menu_revert', action: 'back' },
+  { label: 'Forward', icon: 'ic_media_next', action: 'forward' },
+  { label: 'Reload', icon: 'ic_popup_sync', action: 'reload' }
+];
+
+let menuJava = '';
+let listenerJava = '';
+
+navigationItems.forEach((item, index) => {
+  const itemId = index + 1;
+  menuJava += `                                menu.add(0, ${itemId}, 0, "${item.label}").setIcon(getResources().getIdentifier("${item.icon || 'ic_menu_info_details'}", "drawable", "android"));\n`;
+  
+  if (item.url) {
+      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.loadUrl("${item.url}"));\n                                            return true;\n`;
+  } else if (item.action === 'back') {
+      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> { if(webView.canGoBack()) webView.goBack(); });\n                                            return true;\n`;
+  } else if (item.action === 'forward') {
+      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> { if(webView.canGoForward()) webView.goForward(); });\n                                            return true;\n`;
+  } else if (item.action === 'reload') {
+      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.reload());\n                                            return true;\n`;
+  } else {
+      listenerJava += `                                        } else if (id == ${itemId}) {\n                                            webView.post(() -> webView.loadUrl("${websiteUrl}"));\n                                            return true;\n`;
+  }
+});
+
+// To handle the first 'if' correctly:
+listenerJava = listenerJava.replace('} else if', 'if');
+
+let urlMatcherJava = '';
+navigationItems.forEach((item, index) => {
+    const itemId = index + 1;
+    if (item.url) {
+        urlMatcherJava += `                    if (url.contains("${item.url}")) { bottomNav.getMenu().findItem(${itemId}).setChecked(true); return; }\n`;
+    } else if (item.action === 'home') {
+        urlMatcherJava += `                    if (url.equals("${websiteUrl}") || url.equals("${websiteUrl}/")) { bottomNav.getMenu().findItem(${itemId}).setChecked(true); return; }\n`;
+    }
+});
+
+const cssPayload = `
+  ${hideSelectors} { display: none !important; }
+  :root {
+    --primary-color: ${primaryColor} !important;
+    --primary: ${primaryColor} !important;
+    --accent-color: ${accentColor} !important;
+    --accent: ${accentColor} !important;
+  }
+  body { 
+    padding-bottom: ${paddingBottom} !important;
+    padding-top: env(safe-area-inset-top) !important;
+    overscroll-behavior-y: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    user-select: none !important;
+  }
+  input, textarea, [contenteditable] {
+    user-select: auto !important;
+    -webkit-touch-callout: default !important;
+  }
+  ${customCSS}
+`;
+
+const cssBase64 = Buffer.from(cssPayload).toString('base64');
+const jsBase64 = Buffer.from(customJS).toString('base64');
+
+const syncScript = `
+  const notifyNav = () => {
+    if (window.AppnexusBridge) {
+      window.AppnexusBridge.onUrlChange(window.location.href);
+    }
+  };
+  const originalPushState = history.pushState;
+  if (originalPushState) {
+      history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        notifyNav();
+      };
+  }
+  const originalReplaceState = history.replaceState;
+  if (originalReplaceState) {
+      history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        notifyNav();
+      };
+  }
+  window.addEventListener('popstate', notifyNav);
+  setTimeout(notifyNav, 500); // trigger on load
+  
+  // Biometric Auth Interceptor
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    const passwordInput = form.querySelector('input[type="password"]');
+    if (passwordInput) {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth) {
+         window.Capacitor.Plugins.BiometricAuth.checkBiometry().then((info) => {
+             if (info.isAvailable) {
+                 window.Capacitor.Plugins.BiometricAuth.authenticate({ reason: "Save credentials for auto-login" });
+             }
+         });
+      }
+    }
+  });
+
+  // Haptic Feedback Micro-interactions
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('button, a, [role="button"]')) {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) {
+        window.Capacitor.Plugins.Haptics.impact({ style: 'Light' });
+      }
+    }
+  });
+`;
+const syncBase64 = Buffer.from(syncScript).toString('base64');
 
 // 1. Write the premium dark-mode offline error page to dist/
 const errorHtml = `<!DOCTYPE html>
@@ -17,8 +150,7 @@ const errorHtml = `<!DOCTYPE html>
       --border: rgba(255, 255, 255, 0.08);
       --text: #f3f4f6;
       --text-muted: #9ca3af;
-      --primary: #22d3ee;
-      --primary-hover: #0891b2;
+      --primary: ${primaryColor};
     }
     body {
       background-color: var(--bg);
@@ -60,38 +192,12 @@ const errorHtml = `<!DOCTYPE html>
       margin: 0 auto 24px;
       color: var(--primary);
     }
-    h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0 0 12px;
-      letter-spacing: -0.025em;
-    }
-    p {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin: 0 0 32px;
-    }
+    h1 { font-size: 22px; font-weight: 700; margin: 0 0 12px; }
+    p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0 0 32px; }
     button {
-      background: var(--primary);
-      color: #0b0f19;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(34, 211, 238, 0.2);
-    }
-    button:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(34, 211, 238, 0.3);
-    }
-    button:active {
-      transform: translateY(0);
+      background: var(--primary); color: #0b0f19; border: none; padding: 14px 28px;
+      border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+      width: 100%; transition: all 0.2s ease;
     }
   </style>
 </head>
@@ -109,7 +215,9 @@ const errorHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.mkdirSync('dist', { recursive: true });
+if (!fs.existsSync('dist')) {
+  fs.mkdirSync('dist', { recursive: true });
+}
 fs.writeFileSync('dist/error.html', errorHtml, 'utf8');
 console.log('error.html written to dist/');
 
@@ -129,6 +237,7 @@ if (fs.existsSync(manifestPath)) {
 
 // 3. Find MainActivity.java and inject custom thematic styles and bottom nav
 function findMainActivity(dir) {
+    if (!fs.existsSync(dir)) return null;
     const files = fs.readdirSync(dir);
     for (const file of files) {
         const fullPath = path.join(dir, file);
@@ -150,16 +259,6 @@ if (mainActivityPath) {
     const packageMatch = content.match(/package\s+([^;]+);/);
     const packageName = packageMatch ? packageMatch[1] : 'com.app.appnexus';
     
-    const primaryColor = process.env.PRIMARY_COLOR || '#22d3ee';
-    const accentColor = process.env.ACCENT_COLOR || '#a855f7';
-    const navigationStyle = process.env.NAVIGATION_STYLE || 'bottom-nav';
-    const websiteUrl = process.env.WEBSITE_URL || '';
-    const rawHideSelectors = process.env.HIDE_SELECTORS || '';
-    const hideSelectors = (rawHideSelectors.trim() || 'header, footer, nav, [role="navigation"], .header, .footer, .navbar, .nav-bar, .site-header, .site-footer, #header, #footer, #navbar, .menu-bar, .cookie-banner, .cookie-consent, .download-app-banner, .app-banner')
-      .replace(/"/g, '\\"');
-    
-    const paddingBottom = navigationStyle === 'bottom-nav' ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
-
     const customMainActivity = `package ${packageName};
 
 import android.os.Bundle;
@@ -171,6 +270,24 @@ import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
+    
+    class AppnexusJSInterface {
+        private com.google.android.material.bottomnavigation.BottomNavigationView bottomNav;
+        public AppnexusJSInterface(com.google.android.material.bottomnavigation.BottomNavigationView nav) {
+            this.bottomNav = nav;
+        }
+
+        @android.webkit.JavascriptInterface
+        public void onUrlChange(String url) {
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+${urlMatcherJava}
+                }
+            });
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -186,36 +303,37 @@ public class MainActivity extends BridgeActivity {
                             super.onPageFinished(view, url);
                             
                             // Inject CSS to hide web headers, footers and insert theme custom colors
-                            String css = "var style = document.createElement('style');" +
+                            String cssBase64 = "${cssBase64}";
+                            String injectCssJs = "var style = document.createElement('style');" +
                                          "style.id = 'appnexus-style';" +
-                                         "style.innerHTML = '" +
-                                         "  " + hideSelectors + " { display: none !important; } " +
-                                         "  :root { " +
-                                         "    --primary-color: ${primaryColor} !important; " +
-                                         "    --primary: ${primaryColor} !important; " +
-                                         "    --accent-color: ${accentColor} !important; " +
-                                         "    --accent: ${accentColor} !important; " +
-                                         "  } " +
-                                         "  body { padding-bottom: ${paddingBottom} !important; } " +
-                                         "';" +
+                                         "style.innerHTML = atob('" + cssBase64 + "');" +
                                          "document.head.appendChild(style);";
                             
-                            view.evaluateJavascript(css, null);
-                            
-                            // Inject custom bottom navigation wrapper if layout is bottom-nav
-                            if ("bottom-nav".equals("${navigationStyle}")) {
-                                String navJs = "if (!document.getElementById('appnexus-bottom-nav')) {" +
-                                               "  var div = document.createElement('div');" +
-                                               "  div.id = 'appnexus-bottom-nav';" +
-                                               "  div.innerHTML = \`<div style=\"position: fixed; bottom: 0; left: 0; right: 0; height: 56px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center; z-index: 999999; box-shadow: 0 -4px 12px rgba(0,0,0,0.15); padding-bottom: env(safe-area-inset-bottom, 0px);\">" +
-                                               "    <div onclick=\"window.location.href=\\'${websiteUrl}\\'\" style=\"text-align: center; color: #94a3b8; font-family: sans-serif; font-size: 10px; cursor: pointer; flex: 1;\"><svg style=\"width:20px;height:20px;fill:currentColor;margin:0 auto 2px;\" viewBox=\"0 0 24 24\"><path d=\"M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z\"/></svg><span style=\"display:block;\">Home</span></div>" +
-                                               "    <div onclick=\"window.history.back()\" style=\"text-align: center; color: #94a3b8; font-family: sans-serif; font-size: 10px; cursor: pointer; flex: 1;\"><svg style=\"width:20px;height:20px;fill:currentColor;margin:0 auto 2px;\" viewBox=\"0 0 24 24\"><path d=\"M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg><span style=\"display:block;\">Back</span></div>" +
-                                               "    <div onclick=\"window.history.forward()\" style=\"text-align: center; color: #94a3b8; font-family: sans-serif; font-size: 10px; cursor: pointer; flex: 1;\"><svg style=\"width:20px;height:20px;fill:currentColor;margin:0 auto 2px;\" viewBox=\"0 0 24 24\"><path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\"/></svg><span style=\"display:block;\">Forward</span></div>" +
-                                               "    <div onclick=\"window.location.reload()\" style=\"text-align: center; color: #94a3b8; font-family: sans-serif; font-size: 10px; cursor: pointer; flex: 1;\"><svg style=\"width:20px;height:20px;fill:currentColor;margin:0 auto 2px;\" viewBox=\"0 0 24 24\"><path d=\"M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z\"/></svg><span style=\"display:block;\">Reload</span></div>" +
-                                               "  </div>\`;" +
-                                               "  document.body.appendChild(div);" +
-                                               "}";
-                                view.evaluateJavascript(navJs, null);
+                            view.evaluateJavascript(injectCssJs, null);
+
+                            // Inject AI Custom JS
+                            String jsBase64 = "${jsBase64}";
+                            if (!jsBase64.trim().isEmpty()) {
+                                String injectJs = "try { eval(decodeURIComponent(escape(atob('" + jsBase64 + "')))); } catch(e) { console.error('AI Injection Error:', e); }";
+                                view.evaluateJavascript(injectJs, null);
+                            }
+
+                            // Inject Bidirectional Sync JS
+                            String syncBase64 = "${syncBase64}";
+                            String syncJs = "try { eval(decodeURIComponent(escape(atob('" + syncBase64 + "')))); } catch(e) {}";
+                            view.evaluateJavascript(syncJs, null);
+
+                            // Stop SwipeRefreshLayout spinner if refreshing
+                            android.view.ViewParent parent = view.getParent();
+                            while (parent != null) {
+                                if (parent instanceof androidx.swiperefreshlayout.widget.SwipeRefreshLayout) {
+                                    final androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipe = (androidx.swiperefreshlayout.widget.SwipeRefreshLayout) parent;
+                                    swipe.post(new Runnable() {
+                                        public void run() { swipe.setRefreshing(false); }
+                                    });
+                                    break;
+                                }
+                                parent = parent.getParent();
                             }
                         }
 
@@ -228,13 +346,89 @@ public class MainActivity extends BridgeActivity {
                     });
                 }
             });
+            
+            // Inject TRUE Native Bottom Navigation Programmatically
+            if ("bottom-nav".equals("${navigationStyle}")) {
+                currentBridge.getWebView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        android.view.ViewGroup parent = (android.view.ViewGroup) currentBridge.getWebView().getParent();
+                        if (parent != null && parent instanceof android.widget.FrameLayout) {
+                            android.widget.FrameLayout frame = (android.widget.FrameLayout) parent;
+                            android.view.ViewGroup grandParent = (android.view.ViewGroup) frame.getParent();
+                            if (grandParent != null) {
+                                android.widget.LinearLayout linearLayout = new android.widget.LinearLayout(MainActivity.this);
+                                linearLayout.setOrientation(android.widget.LinearLayout.VERTICAL);
+                                linearLayout.setLayoutParams(new android.view.ViewGroup.LayoutParams(
+                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                                ));
+                                
+                                grandParent.removeView(frame);
+                                
+                                android.widget.LinearLayout.LayoutParams frameParams = new android.widget.LinearLayout.LayoutParams(
+                                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
+                                
+                                androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout = new androidx.swiperefreshlayout.widget.SwipeRefreshLayout(MainActivity.this);
+                                swipeRefreshLayout.setLayoutParams(frameParams);
+                                swipeRefreshLayout.setColorSchemeColors(android.graphics.Color.parseColor("${primaryColor}"));
+                                
+                                swipeRefreshLayout.setOnRefreshListener(new androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener() {
+                                    @Override
+                                    public void onRefresh() {
+                                        currentBridge.getWebView().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                currentBridge.getWebView().reload();
+                                            }
+                                        });
+                                    }
+                                });
+                                
+                                frame.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+                                swipeRefreshLayout.addView(frame);
+                                linearLayout.addView(swipeRefreshLayout);
+                                
+                                com.google.android.material.bottomnavigation.BottomNavigationView bottomNav = new com.google.android.material.bottomnavigation.BottomNavigationView(MainActivity.this);
+                                android.widget.LinearLayout.LayoutParams navParams = new android.widget.LinearLayout.LayoutParams(
+                                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                                bottomNav.setLayoutParams(navParams);
+                                
+                                android.content.res.ColorStateList csl = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("${primaryColor}"));
+                                bottomNav.setItemIconTintList(csl);
+                                bottomNav.setItemTextColor(csl);
+                                
+                                android.view.Menu menu = bottomNav.getMenu();
+${menuJava}
+                                
+                                bottomNav.setOnItemSelectedListener(new com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener() {
+                                    @Override
+                                    public boolean onNavigationItemSelected(android.view.MenuItem item) {
+                                        WebView webView = currentBridge.getWebView();
+                                        int id = item.getItemId();
+${listenerJava}
+                                        }
+                                        return false;
+                                    }
+                                });
+                                
+                                currentBridge.getWebView().addJavascriptInterface(new AppnexusJSInterface(bottomNav), "AppnexusBridge");
+                                
+                                linearLayout.addView(bottomNav);
+                                grandParent.addView(linearLayout);
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 }
 `;
     
     fs.writeFileSync(mainActivityPath, customMainActivity, 'utf8');
-    console.log('MainActivity.java successfully configured!');
+    console.log('MainActivity.java successfully configured with Native enhancements!');
 } else {
     console.error('MainActivity.java not found in project paths.');
 }

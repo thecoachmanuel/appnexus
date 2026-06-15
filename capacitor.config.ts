@@ -13,6 +13,12 @@ const config: CapacitorConfig = {
       '*.lovableproject.com'
     ],
     cleartext: true
+  },
+  plugins: {
+    Keyboard: {
+      resize: 'ionic',
+      resizeOnFullScreen: true
+    }
   }
 };
 

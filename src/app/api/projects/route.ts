@@ -3,6 +3,8 @@ import connectToDatabase from '@/lib/db';
 import { AppProject } from '@/lib/models/AppProject';
 import { verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get('Authorization');

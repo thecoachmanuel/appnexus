@@ -36,7 +36,7 @@ export const userApi = {
   getCredits: () => handleApi(fetchApi('/api/auth/me')),
   useCredits: (...args: any[]) => handleApi(Promise.resolve({ success: true })),
   getSubscription: () => handleApi(fetchApi('/api/subscriptions')),
-  getCreditHistory: (...args: any[]) => handleApi(Promise.resolve([])),
+  getCreditHistory: (limit: number = 50) => handleApi(fetchApi(`/api/credit-history?limit=${limit}`)),
   deleteAccount: (...args: any[]) => handleApi(Promise.resolve({ message: 'Deleted' })),
   getTransactions: (...args: any[]) => handleApi(fetchApi('/api/transactions')),
   getInvoices: (...args: any[]) => handleApi(fetchApi('/api/invoices')),
