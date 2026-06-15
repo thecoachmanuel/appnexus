@@ -53,48 +53,37 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             });
             
             if (targetRun && targetRun.status === 'completed') {
-              if (targetRun.conclusion === 'success') {
-                const artifactsRes = await fetch(targetRun.artifacts_url, {
-                  headers: { 
-                    'Authorization': `token ${github_pat}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'User-Agent': 'AppForge-Builder'
-                  },
-                  cache: 'no-store'
-                });
-                
-                if (artifactsRes.ok) {
-                  const artifactsData = await artifactsRes.json();
-                  if (artifactsData.artifacts && artifactsData.artifacts.length > 0) {
-                    build.status = 'complete';
-                    build.progress = 100;
-                    build.download_url = `${baseUrl}/api/builds/${build._id}/download?artifact_id=${artifactsData.artifacts[0].id}`;
-                    await build.save();
+              const artifactsRes = await fetch(targetRun.artifacts_url, {
+                headers: { 
+                  'Authorization': `token ${github_pat}`,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'User-Agent': 'AppForge-Builder'
+                },
+                cache: 'no-store'
+              });
+              
+              if (artifactsRes.ok) {
+                const artifactsData = await artifactsRes.json();
+                if (artifactsData.artifacts && artifactsData.artifacts.length > 0) {
+                  build.status = 'complete';
+                  build.progress = 100;
+                  build.download_url = `${baseUrl}/api/builds/${build._id}/download?artifact_id=${artifactsData.artifacts[0].id}`;
+                  await build.save();
 
-                    if (build.project_id) {
-                      const { AppProject } = await import('@/lib/models/AppProject');
-                      await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'complete' });
-                    }
-                  } else {
-                    // Success but no artifact!
-                    build.status = 'failed';
-                    build.error_message = 'Build succeeded but no APK artifact was found. Check your GitHub Actions upload path.';
-                    await build.save();
-
-                    if (build.project_id) {
-                      const { AppProject } = await import('@/lib/models/AppProject');
-                      await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'failed' });
-                    }
+                  if (build.project_id) {
+                    const { AppProject } = await import('@/lib/models/AppProject');
+                    await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'complete' });
                   }
-                }
-              } else {
-                build.status = 'failed';
-                build.error_message = `GitHub Actions build ${targetRun.conclusion || 'failed'}.`;
-                await build.save();
+                } else {
+                  // No artifact found. If the run is completed, it's a failure.
+                  build.status = 'failed';
+                  build.error_message = `GitHub Actions build ${targetRun.conclusion || 'failed'}.`;
+                  await build.save();
 
-                if (build.project_id) {
-                  const { AppProject } = await import('@/lib/models/AppProject');
-                  await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'failed' });
+                  if (build.project_id) {
+                    const { AppProject } = await import('@/lib/models/AppProject');
+                    await AppProject.findByIdAndUpdate(build.project_id, { build_status: 'failed' });
+                  }
                 }
               }
             }
