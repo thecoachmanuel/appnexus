@@ -87,7 +87,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                     }
                   }
                 }
-              } else if (targetRun.conclusion === 'failure' || targetRun.conclusion === 'cancelled') {
+              } else {
                 build.status = 'failed';
                 build.error_message = `GitHub Actions build ${targetRun.conclusion || 'failed'}.`;
                 await build.save();

@@ -1581,7 +1581,7 @@ const BuildStep = ({ config, onBack }: BuildStepProps) => {
         </div>
       )}
 
-      {buildStatus === "building" && (
+      {buildStatus !== "idle" && (
         <motion.div 
           className="max-w-xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
