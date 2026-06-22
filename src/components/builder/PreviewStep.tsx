@@ -118,24 +118,8 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
   const [isFullscreenLoading, setIsFullscreenLoading] = useState(true);
   const [fullscreenIframeKey, setFullscreenIframeKey] = useState(0);
   const [isOrientationLocked, setIsOrientationLocked] = useState(devicePreview.isOrientationLocked);
-  const [isAutoReload, setIsAutoReload] = useState(false);
   const deviceFrameRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  // Auto-reload effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isAutoReload) {
-      interval = setInterval(() => {
-        setIframeKey((prev) => prev + 1);
-        if (useProxy) {
-          setProxyUrl(null);
-          setProxyLoading(true);
-        }
-      }, 5000); // Reload every 5 seconds
-    }
-    return () => clearInterval(interval);
-  }, [isAutoReload, useProxy]);
 
   // Persist preferences when they change
   useEffect(() => {
@@ -1051,7 +1035,7 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
               </div>
 
               {/* Secondary Actions */}
-              <div className="grid grid-cols-6 gap-1 pt-2 border-t border-border">
+              <div className="grid grid-cols-5 gap-1 pt-2 border-t border-border">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -1080,17 +1064,6 @@ const PreviewStep = ({ config, onBack, onNext }: PreviewStepProps) => {
                 <Button variant="ghost" size="sm" className="h-12 flex-col gap-1 px-1 rounded-xl hover:bg-muted" onClick={handleRefresh}>
                   <RefreshCw className="w-4 h-4 text-muted-foreground" />
                   <span className="text-[10px] text-muted-foreground">Refresh</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-12 flex-col gap-1 px-1 rounded-xl hover:bg-muted ${isAutoReload ? "bg-primary/10" : ""}`} 
-                  onClick={() => setIsAutoReload(!isAutoReload)}
-                >
-                  <RefreshCw className={`w-4 h-4 ${isAutoReload ? "text-primary animate-spin" : "text-muted-foreground"}`} />
-                  <span className={`text-[10px] ${isAutoReload ? "text-primary" : "text-muted-foreground"}`}>
-                    Auto
-                  </span>
                 </Button>
                 {useProxy ? (
                   <Button 
